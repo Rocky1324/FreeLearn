@@ -10,6 +10,7 @@ import CourseDetail from "@/pages/course-detail";
 import Orientation from "@/pages/orientation";
 import Opportunities from "@/pages/opportunities";
 import Centers from "@/pages/centers";
+import Schools from "@/pages/schools";
 import About from "@/pages/about";
 import Admin from "@/pages/admin";
 import NotFound from "@/pages/not-found";
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/orientation" component={Orientation} />
       <Route path="/opportunites" component={Opportunities} />
       <Route path="/centres" component={Centers} />
+      <Route path="/ecoles" component={Schools} />
       <Route path="/a-propos" component={About} />
       <Route path="/admin" component={Admin} />
       <Route component={NotFound} />

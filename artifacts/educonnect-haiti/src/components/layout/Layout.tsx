@@ -17,6 +17,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/orientation", label: "Orientation" },
     { href: "/opportunites", label: "Opportunités" },
     { href: "/centres", label: "Centres Relais" },
+    { href: "/ecoles", label: "Écoles" },
     { href: "/a-propos", label: "À Propos" },
   ];
 
