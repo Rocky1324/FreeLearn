@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useRoute, Link } from "wouter";
-import { ArrowLeft, ArrowRight, DownloadCloud, CheckCircle2, PlayCircle, BookText, PenTool, Check, X } from "lucide-react";
+import { useRoute, Link, useLocation } from "wouter";
+import { ArrowLeft, ArrowRight, DownloadCloud, CheckCircle2, PlayCircle, BookText, PenTool, Check, X, Lightbulb } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -10,8 +10,11 @@ import { toast } from "sonner";
 
 export default function CourseDetail() {
   const [, params] = useRoute("/cours/:id");
+  const [, navigate] = useLocation();
   const courseId = params?.id;
   const course = courses.find(c => c.id === courseId);
+  const courseIndex = courses.findIndex(c => c.id === courseId);
+  const nextCourse = courseIndex >= 0 ? courses[courseIndex + 1] : undefined;
 
   const [downloadedCourses, setDownloadedCourses] = useLocalStorage<Record<string, boolean>>("downloaded-courses", {});
   const [activeChapterId, setActiveChapterId] = useState(course?.chapters[0]?.id);
@@ -87,6 +90,23 @@ export default function CourseDetail() {
         : "Cours téléchargé pour une lecture hors-ligne",
     );
   };
+
+  const goToNextChapter = () => {
+    if (!course) return;
+    const idx = course.chapters.findIndex(c => c.id === activeChapter.id);
+    const next = course.chapters[idx + 1];
+    if (next) {
+      setActiveChapterId(next.id);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (nextCourse) {
+      navigate(`/cours/${nextCourse.id}`);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const isLastChapter = course
+    ? course.chapters.findIndex(c => c.id === activeChapter.id) === course.chapters.length - 1
+    : false;
 
   const handleAnswer = (exerciseIdx: number, optionIdx: number) => {
     if (submitted[activeChapter.id]) return;
@@ -242,6 +262,26 @@ export default function CourseDetail() {
               </div>
             </div>
 
+            {/* Examples */}
+            {activeChapter.examples && activeChapter.examples.length > 0 && (
+              <div className="bg-card border rounded-2xl p-6 md:p-8 shadow-sm space-y-6">
+                <div className="flex items-center gap-2 font-bold text-lg text-primary border-b pb-4">
+                  <Lightbulb className="w-5 h-5" />
+                  <h3>Exemples résolus</h3>
+                </div>
+                <div className="space-y-4">
+                  {activeChapter.examples.map((ex, idx) => (
+                    <div key={idx} className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                      <p className="font-bold text-amber-900 mb-2">{ex.title}</p>
+                      <p className="text-amber-900/90 whitespace-pre-line leading-relaxed text-sm">
+                        {ex.content}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Exercises */}
             <div className="bg-card border rounded-2xl p-6 md:p-8 shadow-sm space-y-8">
               <div className="flex items-center gap-2 font-bold text-lg text-primary border-b pb-4">
@@ -301,6 +341,14 @@ export default function CourseDetail() {
                           );
                         })}
                       </div>
+                      {isSubmitted && ex.explanation && (
+                        <div className={`rounded-lg p-4 text-sm border ${isCorrect ? "bg-green-50 border-green-200 text-green-900" : "bg-red-50 border-red-200 text-red-900"}`}>
+                          <p className="font-bold mb-1">
+                            {isCorrect ? "Bonne réponse !" : "Explication :"}
+                          </p>
+                          <p className="leading-relaxed">{ex.explanation}</p>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -318,10 +366,28 @@ export default function CourseDetail() {
                 <div className="pt-6 border-t mt-8 flex flex-col sm:flex-row gap-4 items-center bg-muted/30 p-6 rounded-xl">
                   <div className="flex-1">
                     <p className="font-bold text-lg mb-1">Excellent travail !</p>
-                    <p className="text-muted-foreground text-sm">Tu as terminé cette leçon. Prêt pour la suite ?</p>
+                    <p className="text-muted-foreground text-sm">
+                      {!isLastChapter
+                        ? "Tu as terminé ce chapitre. Prêt pour la suite ?"
+                        : nextCourse
+                        ? `Tu as terminé tout le cours ! Continue avec : ${nextCourse.title}.`
+                        : "Tu as terminé tous les cours disponibles. Bravo !"}
+                    </p>
                   </div>
-                  {course.chapters.length > 1 && (
-                    <Button variant="secondary">Chapitre Suivant <ArrowRight className="w-4 h-4 ml-2" /></Button>
+                  {!isLastChapter ? (
+                    <Button variant="secondary" onClick={goToNextChapter}>
+                      Chapitre suivant <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  ) : nextCourse ? (
+                    <Button variant="secondary" onClick={goToNextChapter}>
+                      Cours suivant <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  ) : (
+                    <Link href="/cours">
+                      <Button variant="secondary">
+                        Retour au catalogue <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </Link>
                   )}
                 </div>
               )}

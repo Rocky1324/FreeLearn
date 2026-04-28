@@ -1,11 +1,42 @@
+import { useMemo, useState } from "react";
 import { Link } from "wouter";
-import { BookOpen, GraduationCap, MapPin, HeartHandshake, ArrowRight, PlayCircle, Award, Briefcase } from "lucide-react";
+import { BookOpen, GraduationCap, MapPin, HeartHandshake, ArrowRight, PlayCircle, Award, Briefcase, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import heroImg from "@/assets/images/hero.png";
 import { courses } from "@/data/courses";
 import { Layout } from "@/components/layout/Layout";
 
 export default function Home() {
+  const subjects = useMemo(
+    () => ["Tous", ...Array.from(new Set(courses.map(c => c.subject)))],
+    [],
+  );
+  const [activeSubject, setActiveSubject] = useState<string>("Tous");
+  const [query, setQuery] = useState<string>("");
+
+  const filteredCourses = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return courses.filter(c => {
+      const matchesSubject = activeSubject === "Tous" || c.subject === activeSubject;
+      if (!matchesSubject) return false;
+      if (!q) return true;
+      const haystack = [
+        c.title,
+        c.subject,
+        c.level,
+        c.description,
+        ...c.chapters.map(ch => ch.title),
+        ...c.chapters.map(ch => ch.summary),
+      ]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [activeSubject, query]);
+
+  const visibleCourses = filteredCourses.slice(0, 6);
+
   return (
     <Layout>
       {/* Hero Section */}
@@ -70,43 +101,96 @@ export default function Home() {
       {/* Featured Courses */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-end mb-10">
+          <div className="flex flex-col md:flex-row justify-between md:items-end gap-6 mb-8">
             <div className="space-y-2">
               <h2 className="text-3xl font-bold font-serif text-foreground">Commencez à apprendre</h2>
               <p className="text-muted-foreground max-w-xl">Des cours adaptés au programme du Ministère de l'Éducation Nationale, conçus pour être clairs et accessibles même sur téléphone.</p>
             </div>
-            <Link href="/cours" className="hidden md:flex items-center text-primary font-medium hover:underline">
+            <Link href="/cours" className="hidden md:flex items-center text-primary font-medium hover:underline shrink-0">
               Voir tout le catalogue <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {courses.slice(0, 3).map(course => (
-              <Link key={course.id} href={`/cours/${course.id}`}>
-                <div className="group bg-card border rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col cursor-pointer">
-                  <div className="p-6 flex-1">
-                    <div className="flex justify-between items-start mb-4">
-                      <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">
-                        {course.subject}
-                      </span>
-                      <span className="text-sm font-medium text-muted-foreground">{course.level}</span>
-                    </div>
-                    <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{course.title}</h3>
-                    <p className="text-muted-foreground text-sm line-clamp-3">{course.description}</p>
-                  </div>
-                  <div className="px-6 py-4 border-t bg-muted/10 flex justify-between items-center">
-                    <span className="text-sm font-medium flex items-center text-muted-foreground">
-                      <PlayCircle className="h-4 w-4 mr-1" /> {course.duration}
-                    </span>
-                    <span className="text-sm font-bold text-primary flex items-center">
-                      Commencer <ArrowRight className="h-4 w-4 ml-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
+          <div className="bg-card border rounded-2xl p-4 md:p-5 mb-8 space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Rechercher un sujet (ex : Pythagore, indigénisme, mitose)"
+                className="pl-10 h-11"
+                data-testid="input-home-search"
+              />
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-muted-foreground mr-1">Matière :</span>
+              {subjects.map((subject) => {
+                const active = activeSubject === subject;
+                return (
+                  <button
+                    key={subject}
+                    type="button"
+                    onClick={() => setActiveSubject(subject)}
+                    data-testid={`chip-subject-${subject.toLowerCase()}`}
+                    className={`text-sm px-3 py-1.5 rounded-full border font-medium transition-colors ${
+                      active
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background text-foreground border-border hover:bg-muted"
+                    }`}
+                  >
+                    {subject}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          
+
+          {visibleCourses.length === 0 ? (
+            <div className="bg-card border rounded-2xl p-10 text-center space-y-3">
+              <BookOpen className="h-10 w-10 text-muted-foreground mx-auto" />
+              <h3 className="font-bold text-lg">Aucun cours ne correspond</h3>
+              <p className="text-muted-foreground text-sm">
+                Essaie un autre mot-clé ou réinitialise les filtres pour voir tout le catalogue.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setQuery("");
+                  setActiveSubject("Tous");
+                }}
+              >
+                Réinitialiser les filtres
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {visibleCourses.map((course) => (
+                <Link key={course.id} href={`/cours/${course.id}`}>
+                  <div className="group bg-card border rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col cursor-pointer">
+                    <div className="p-6 flex-1">
+                      <div className="flex justify-between items-start mb-4">
+                        <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">
+                          {course.subject}
+                        </span>
+                        <span className="text-sm font-medium text-muted-foreground">{course.level}</span>
+                      </div>
+                      <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{course.title}</h3>
+                      <p className="text-muted-foreground text-sm line-clamp-3">{course.description}</p>
+                    </div>
+                    <div className="px-6 py-4 border-t bg-muted/10 flex justify-between items-center">
+                      <span className="text-sm font-medium flex items-center text-muted-foreground">
+                        <PlayCircle className="h-4 w-4 mr-1" /> {course.duration}
+                      </span>
+                      <span className="text-sm font-bold text-primary flex items-center">
+                        Commencer <ArrowRight className="h-4 w-4 ml-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+
           <div className="mt-8 text-center md:hidden">
             <Link href="/cours">
               <Button variant="outline" className="w-full">Voir tout le catalogue</Button>
