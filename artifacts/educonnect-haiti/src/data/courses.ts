@@ -108,7 +108,6 @@ export const courses: Course[] = [
       {
         id: "c2",
         title: "Chapitre 2 — Les inéquations du premier degré",
-        youtubeId: "9hWLYzXsj7c",
         youtubeSearch: "inéquation premier degré cours collège",
         summary:
           "Une inéquation est une inégalité (avec <, >, ≤, ≥) contenant une inconnue. Les règles sont presque les mêmes que pour les équations, sauf qu'il faut INVERSER le sens du signe quand on multiplie ou divise par un nombre négatif.",
@@ -224,7 +223,6 @@ export const courses: Course[] = [
       {
         id: "c4",
         title: "Chapitre 4 — Le théorème de Thalès",
-        youtubeId: "tFnVEPV6oG0",
         youtubeSearch: "théorème de Thalès explication simple",
         summary:
           "Quand deux droites parallèles coupent deux droites sécantes, elles déterminent des segments proportionnels. C'est l'outil principal pour calculer des longueurs dans des configurations de triangles imbriqués.",
@@ -333,7 +331,6 @@ export const courses: Course[] = [
       {
         id: "c2",
         title: "Chapitre 2 — Jacques Roumain et 'Gouverneurs de la rosée'",
-        youtubeId: "RYqE1meCxv4",
         youtubeSearch: "Gouverneurs de la rosée Jacques Roumain résumé analyse",
         summary:
           "Publié en 1944 (à titre posthume), 'Gouverneurs de la rosée' raconte le retour de Manuel à Fonds-Rouge, son village ravagé par la sécheresse et divisé par une vendetta. Manuel découvre une source d'eau et tente de réconcilier les habitants pour la conduire au village. C'est un roman engagé sur la solidarité paysanne.",
@@ -391,7 +388,6 @@ export const courses: Course[] = [
       {
         id: "c3",
         title: "Chapitre 3 — Le réalisme merveilleux et Jacques-Stephen Alexis",
-        youtubeId: "DjQjcU3jzGc",
         youtubeSearch: "réalisme merveilleux Jacques Stephen Alexis Haïti",
         summary:
           "Le réalisme merveilleux est une esthétique théorisée par Jacques-Stephen Alexis en 1956. Il mêle réalité quotidienne haïtienne et merveilleux populaire (vodou, légendes, oralité). Œuvres clés : 'Compère Général Soleil', 'Les Arbres musiciens', 'L'Espace d'un cillement'.",
@@ -506,7 +502,6 @@ export const courses: Course[] = [
       {
         id: "c2",
         title: "Chapitre 2 — Les organites cellulaires",
-        youtubeId: "URUJD5NEXC8",
         youtubeSearch: "organites cellulaires cours lycée biologie",
         summary:
           "Une cellule eucaryote contient plusieurs organites, chacun avec une fonction spécifique : noyau (ADN), mitochondrie (énergie/ATP), réticulum endoplasmique (synthèse), appareil de Golgi (tri/expédition), lysosomes (digestion), ribosomes (traduction des protéines).",
@@ -564,7 +559,6 @@ export const courses: Course[] = [
       {
         id: "c3",
         title: "Chapitre 3 — La division cellulaire (mitose)",
-        youtubeId: "f-ldPgEfAHI",
         youtubeSearch: "mitose division cellulaire cours simple",
         summary:
           "La mitose est la division d'une cellule mère en deux cellules filles génétiquement identiques. Elle comprend 4 phases : prophase (condensation des chromosomes), métaphase (alignement à l'équateur), anaphase (séparation), télophase (formation de deux noyaux).",

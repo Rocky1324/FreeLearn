@@ -219,9 +219,12 @@ export default function CourseDetail() {
                         allowFullScreen
                       />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-8">
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-8 text-center">
                         <PlayCircle className="w-16 h-16 text-white/50 mb-4" />
-                        <p className="font-medium text-white/80">Vidéo bientôt disponible</p>
+                        <p className="font-medium text-white/90 mb-2">Vidéo en cours de sélection</p>
+                        <p className="text-sm text-white/60 max-w-md">
+                          Lis le résumé et fais les exercices ci-dessous, ou cherche une vidéo sur ce sujet via le lien sous le lecteur.
+                        </p>
                       </div>
                     )}
                     {useLocal && (
