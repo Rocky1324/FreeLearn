@@ -18,6 +18,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/opportunites", label: "Opportunités" },
     { href: "/centres", label: "Centres Relais" },
     { href: "/ecoles", label: "Écoles" },
+    { href: "/admin", label: "Espace Enseignant" },
     { href: "/a-propos", label: "À Propos" },
   ];
 

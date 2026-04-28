@@ -5,7 +5,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { courses } from "@/data/courses";
-import { getLessonVideo } from "@/lib/lesson-storage";
+import { getLessonVideo, getYoutubeId } from "@/lib/lesson-storage";
 import { toast } from "sonner";
 
 export default function CourseDetail() {
@@ -21,6 +21,7 @@ export default function CourseDetail() {
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState<Record<string, boolean>>({});
   const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string | null>(null);
+  const [customYoutubeId, setCustomYoutubeId] = useState<string | null>(null);
 
   const isDownloaded = downloadedCourses[courseId || ""] || false;
   const activeChapterIdSafe = activeChapterId || course?.chapters[0]?.id;
@@ -29,12 +30,16 @@ export default function CourseDetail() {
     if (!activeChapterIdSafe) return;
     let revoke: string | null = null;
     setUploadedVideoUrl(null);
+    setCustomYoutubeId(null);
     getLessonVideo(activeChapterIdSafe).then((blob) => {
       if (blob) {
         const url = URL.createObjectURL(blob);
         revoke = url;
         setUploadedVideoUrl(url);
       }
+    }).catch(() => {});
+    getYoutubeId(activeChapterIdSafe).then((id) => {
+      if (id) setCustomYoutubeId(id);
     }).catch(() => {});
     return () => { if (revoke) URL.revokeObjectURL(revoke); };
   }, [activeChapterIdSafe]);
@@ -209,11 +214,11 @@ export default function CourseDetail() {
                         controls
                         playsInline
                       />
-                    ) : activeChapter.youtubeId ? (
+                    ) : (customYoutubeId || activeChapter.youtubeId) ? (
                       <iframe
-                        key={activeChapter.id}
+                        key={`${activeChapter.id}-${customYoutubeId || activeChapter.youtubeId}`}
                         className="w-full h-full"
-                        src={`https://www.youtube.com/embed/${activeChapter.youtubeId}?rel=0&modestbranding=1`}
+                        src={`https://www.youtube.com/embed/${customYoutubeId || activeChapter.youtubeId}?rel=0&modestbranding=1`}
                         title={`Vidéo de la leçon : ${activeChapter.title}`}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
