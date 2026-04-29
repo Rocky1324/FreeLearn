@@ -224,12 +224,27 @@ export default function CourseDetail() {
                         allowFullScreen
                       />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-8 text-center">
-                        <PlayCircle className="w-16 h-16 text-white/50 mb-4" />
-                        <p className="font-medium text-white/90 mb-2">Vidéo en cours de sélection</p>
-                        <p className="text-sm text-white/60 max-w-md">
-                          Lis le résumé et fais les exercices ci-dessous, ou cherche une vidéo sur ce sujet via le lien sous le lecteur.
-                        </p>
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-8 text-center gap-4">
+                        <PlayCircle className="w-14 h-14 text-white/40" />
+                        <div>
+                          <p className="font-semibold text-white/80 mb-1">Trouver une vidéo sur ce sujet</p>
+                          <p className="text-xs text-white/50 max-w-xs">
+                            Clique sur le bouton ci-dessous pour rechercher directement une vidéo explicative.
+                          </p>
+                        </div>
+                        {activeChapter.youtubeSearch && (
+                          <a
+                            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(activeChapter.youtubeSearch)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-3 rounded-xl transition-colors text-sm shadow-lg"
+                          >
+                            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                            </svg>
+                            Rechercher sur YouTube
+                          </a>
+                        )}
                       </div>
                     )}
                     {useLocal && (
@@ -245,7 +260,7 @@ export default function CourseDetail() {
                   </div>
                 );
               })()}
-              {activeChapter.youtubeSearch && (
+              {activeChapter.youtubeSearch && (customYoutubeId || activeChapter.youtubeId) && (
                 <div className="px-6 md:px-8 pt-4 -mb-2">
                   <a
                     href={`https://www.youtube.com/results?search_query=${encodeURIComponent(activeChapter.youtubeSearch)}`}
