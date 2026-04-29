@@ -1,10 +1,12 @@
-services:
+databases:
   # 1. PostgreSQL Database
-  - type: pserv
-    name: educonnect-db
+  - name: educonnect-db
+    databaseName: educonnect
+    user: educonnect
     plan: free
     region: ohio
 
+services:
   # 2. Backend API Service
   - type: web
     name: educonnect-api
