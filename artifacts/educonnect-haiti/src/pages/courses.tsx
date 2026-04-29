@@ -7,18 +7,30 @@ import { Button } from "@/components/ui/button";
 import { courses } from "@/data/courses";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
+const LEVEL_GROUPS = [
+  { label: "Tous les niveaux", value: "Tous" },
+  { label: "1ère – 3ème AF", value: ["1ère AF", "2ème AF", "3ème AF"] },
+  { label: "4ème – 6ème AF", value: ["4ème AF", "5ème AF", "6ème AF"] },
+  { label: "7ème – 9ème AF", value: ["7ème AF", "8ème AF", "9ème AF"] },
+  { label: "Secondaire", value: ["Seconde", "Rhétorique", "Philo", "NS1", "NS2"] },
+];
+
 export default function Courses() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSubject, setSelectedSubject] = useState<string>("Tous");
+  const [selectedLevelGroup, setSelectedLevelGroup] = useState<string>("Tous");
   const [downloadedCourses] = useLocalStorage<Record<string, boolean>>("downloaded-courses", {});
 
-  const subjects = ["Tous", "Mathématiques", "Français", "Sciences", "Histoire", "Anglais"];
+  const allSubjects = ["Tous", ...Array.from(new Set(courses.map(c => c.subject))).sort()];
 
   const filteredCourses = courses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           course.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSubject = selectedSubject === "Tous" || course.subject === selectedSubject;
-    return matchesSearch && matchesSubject;
+    const group = LEVEL_GROUPS.find(g => g.label === selectedLevelGroup || (g.value === "Tous" && selectedLevelGroup === "Tous"));
+    const levels = group && Array.isArray(group.value) ? group.value : null;
+    const matchesLevel = selectedLevelGroup === "Tous" || (levels !== null && levels.includes(course.level));
+    return matchesSearch && matchesSubject && matchesLevel;
   });
 
   return (
@@ -28,7 +40,7 @@ export default function Courses() {
           <div className="max-w-3xl space-y-4">
             <h1 className="text-4xl font-bold font-serif">Catalogue de Cours</h1>
             <p className="text-lg text-muted-foreground">
-              Des leçons claires, des résumés concis et des exercices interactifs pour vous préparer aux examens d'État, de la 6e AF à la Philo.
+              Des leçons claires, des résumés concis et des exercices interactifs pour toutes les classes — de la 1ère AF jusqu'à la Philo.
             </p>
           </div>
         </div>
@@ -38,10 +50,28 @@ export default function Courses() {
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar / Filters */}
           <div className="w-full md:w-64 space-y-6">
-            <div className="space-y-4">
+            <div className="space-y-3">
+              <h3 className="font-bold flex items-center"><Filter className="w-4 h-4 mr-2"/> Niveau</h3>
+              <div className="flex flex-col space-y-1">
+                {LEVEL_GROUPS.map(group => (
+                  <button
+                    key={group.label}
+                    onClick={() => setSelectedLevelGroup(group.label === "Tous les niveaux" ? "Tous" : group.label)}
+                    className={`text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                      (group.label === "Tous les niveaux" ? "Tous" : group.label) === selectedLevelGroup
+                        ? "bg-primary text-primary-foreground font-medium" 
+                        : "hover:bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {group.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-3">
               <h3 className="font-bold flex items-center"><Filter className="w-4 h-4 mr-2"/> Matières</h3>
-              <div className="flex flex-col space-y-2">
-                {subjects.map(subject => (
+              <div className="flex flex-col space-y-1">
+                {allSubjects.map(subject => (
                   <button
                     key={subject}
                     onClick={() => setSelectedSubject(subject)}
@@ -120,7 +150,7 @@ export default function Courses() {
                     <p className="text-muted-foreground font-medium">Aucun cours ne correspond à votre recherche.</p>
                     <Button 
                       variant="link" 
-                      onClick={() => { setSearchTerm(""); setSelectedSubject("Tous"); }}
+                      onClick={() => { setSearchTerm(""); setSelectedSubject("Tous"); setSelectedLevelGroup("Tous"); }}
                     >
                       Réinitialiser les filtres
                     </Button>
