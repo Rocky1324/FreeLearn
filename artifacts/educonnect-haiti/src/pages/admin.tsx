@@ -26,9 +26,13 @@ import {
   WifiOff,
   ChevronDown,
   ChevronUp,
+  LogOut,
 } from "lucide-react";
+import { useAdminAuth } from "@/hooks/use-admin-auth";
+import { AdminLoginScreen } from "@/components/AdminLoginScreen";
 
 export default function Admin() {
+  const { authed, login, logout, error: authError, loading: authLoading } = useAdminAuth();
   const [stored, setStored] = useState<string[]>([]);
   const [ytIds, setYtIds] = useState<Record<string, string>>({});
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -216,12 +220,28 @@ export default function Admin() {
 
   const stats = getOfflineStats();
 
+  if (!authed) {
+    return (
+      <AdminLoginScreen
+        onLogin={login}
+        error={authError}
+        loading={authLoading}
+      />
+    );
+  }
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <h1 className="text-3xl md:text-4xl font-bold font-serif mb-3">
-          Espace Enseignant
-        </h1>
+        <div className="flex items-start justify-between mb-3 gap-4">
+          <h1 className="text-3xl md:text-4xl font-bold font-serif">
+            Espace Enseignant
+          </h1>
+          <Button variant="ghost" size="sm" onClick={logout} className="shrink-0 text-muted-foreground">
+            <LogOut className="w-4 h-4 mr-2" />
+            Déconnexion
+          </Button>
+        </div>
         <p className="text-muted-foreground mb-8">
           Gérez les vidéos de chaque chapitre. Les vidéos MP4 sauvegardées
           fonctionnent <strong>100% hors-ligne</strong>. Les liens YouTube
