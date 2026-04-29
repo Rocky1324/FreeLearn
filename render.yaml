@@ -2,7 +2,6 @@ services:
   # 1. PostgreSQL Database
   - type: pserv
     name: educonnect-db
-    env: image
     plan: free
     region: ohio
 
@@ -27,7 +26,6 @@ services:
     name: educonnect-frontend
     env: static
     plan: free
-    region: ohio
     buildCommand: pnpm install && pnpm --filter @workspace/educonnect-haiti build
     staticPublishPath: ./artifacts/educonnect-haiti/dist/public
     envVars:
