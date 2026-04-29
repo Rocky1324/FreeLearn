@@ -16,6 +16,10 @@ services:
     buildCommand: pnpm install && pnpm --filter @workspace/api-server build
     startCommand: cd artifacts/api-server && pnpm start
     envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: PNPM_VERSION
+        value: "10.33.2"
       - key: DATABASE_URL
         fromDatabase:
           name: educonnect-db
@@ -27,9 +31,13 @@ services:
   - type: web
     name: educonnect-frontend
     env: static
-    buildCommand: pnpm install && pnpm --filter @workspace/educonnect-haiti build
+    buildCommand: npm install -g pnpm@10.33.2 && pnpm install && pnpm --filter @workspace/educonnect-haiti build
     staticPublishPath: ./artifacts/educonnect-haiti/dist/public
     envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: PNPM_VERSION
+        value: "10.33.2"
       - key: NODE_ENV
         value: production
       - key: BASE_PATH
