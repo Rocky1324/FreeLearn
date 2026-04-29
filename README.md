@@ -48,19 +48,6 @@ This is a modern web application built with:
    pnpm run dev
    ```
 
-## Deployment
-
-This project is configured to be deployed on [Render](https://render.com/).
-
-1. Connect your GitHub repository to Render.
-2. Render will automatically detect the `render.yaml` Blueprint.
-3. This will provision:
-   - A PostgreSQL Database (`pserv`)
-   - An API Server Web Service (`web`)
-   - A Static Site for the Frontend (`static_site`)
-
-Note: Ensure that you set your `DATABASE_URL` and `VITE_API_URL` environment variables securely in your Render dashboard after provisioning if not automatically linked.
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
