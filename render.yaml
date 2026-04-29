@@ -27,7 +27,6 @@ services:
   - type: web
     name: educonnect-frontend
     env: static
-    plan: free
     buildCommand: pnpm install && pnpm --filter @workspace/educonnect-haiti build
     staticPublishPath: ./artifacts/educonnect-haiti/dist/public
     envVars:
