@@ -27,9 +27,11 @@ import {
   ChevronDown,
   ChevronUp,
   LogOut,
+  QrCode,
 } from "lucide-react";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { AdminLoginScreen } from "@/components/AdminLoginScreen";
+import { QRCodeModal } from "@/components/QRCodeModal";
 
 export default function Admin() {
   const { authed, login, logout, error: authError, loading: authLoading } = useAdminAuth();
@@ -40,6 +42,7 @@ export default function Admin() {
   const [downloading, setDownloading] = useState<Record<string, number | null>>({});
   const [loading, setLoading] = useState(true);
   const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
+  const [qrCourse, setQrCourse] = useState<{ id: string; title: string } | null>(null);
   const abortRefs = useRef<Record<string, AbortController>>({});
 
   const refresh = async () => {
@@ -305,34 +308,44 @@ export default function Admin() {
 
               return (
                 <section key={course.id} className="border rounded-2xl bg-card overflow-hidden">
-                  <button
-                    className="w-full text-left p-5 flex items-center justify-between gap-4 hover:bg-muted/30 transition-colors"
-                    onClick={() =>
-                      setExpandedCourse(isExpanded ? null : course.id)
-                    }
-                  >
-                    <div>
-                      <h2 className="text-lg font-bold">{course.title}</h2>
-                      <p className="text-sm text-muted-foreground">
-                        {course.subject} · {course.level} ·{" "}
-                        {course.chapters.length} chapitre
-                        {course.chapters.length > 1 ? "s" : ""}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      {courseOfflineCount > 0 && (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-green-700 bg-green-100 px-2.5 py-1 rounded-full">
-                          <WifiOff className="w-3 h-3" />
-                          {courseOfflineCount}/{course.chapters.length} hors-ligne
-                        </span>
-                      )}
-                      {isExpanded ? (
-                        <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                      )}
-                    </div>
-                  </button>
+                  <div className="flex items-center gap-2 px-5 py-4 hover:bg-muted/30 transition-colors">
+                    {/* Expand zone */}
+                    <button
+                      className="flex-1 text-left flex items-center gap-4 min-w-0"
+                      onClick={() => setExpandedCourse(isExpanded ? null : course.id)}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <h2 className="text-lg font-bold leading-tight">{course.title}</h2>
+                        <p className="text-sm text-muted-foreground">
+                          {course.subject} · {course.level} ·{" "}
+                          {course.chapters.length} chapitre
+                          {course.chapters.length > 1 ? "s" : ""}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        {courseOfflineCount > 0 && (
+                          <span className="hidden sm:inline-flex items-center gap-1 text-xs font-bold text-green-700 bg-green-100 px-2.5 py-1 rounded-full">
+                            <WifiOff className="w-3 h-3" />
+                            {courseOfflineCount}/{course.chapters.length}
+                          </span>
+                        )}
+                        {isExpanded ? (
+                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                        )}
+                      </div>
+                    </button>
+
+                    {/* QR Button */}
+                    <button
+                      onClick={() => setQrCourse({ id: course.id, title: course.title })}
+                      title="Générer un QR code pour ce cours"
+                      className="shrink-0 p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors"
+                    >
+                      <QrCode className="w-5 h-5" />
+                    </button>
+                  </div>
 
                   {isExpanded && (
                     <div className="border-t px-5 py-4 space-y-5">
@@ -548,6 +561,15 @@ export default function Admin() {
           </div>
         )}
       </div>
+
+      {/* QR Code Modal */}
+      {qrCourse && (
+        <QRCodeModal
+          courseTitle={qrCourse.title}
+          courseUrl={`${window.location.origin}${import.meta.env.BASE_URL.replace(/\/$/, "")}/cours/${qrCourse.id}`}
+          onClose={() => setQrCourse(null)}
+        />
+      )}
     </Layout>
   );
 }
