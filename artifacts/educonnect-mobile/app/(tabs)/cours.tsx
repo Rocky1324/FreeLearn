@@ -13,12 +13,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { courses } from "@/data/courses";
+import { useProgress } from "@/hooks/useProgress";
 
 const LEVELS = ["Tous", ...Array.from(new Set(courses.map((c) => c.level)))];
 
 export default function CoursScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { courseStats } = useProgress();
   const [activeLevel, setActiveLevel] = useState("Tous");
 
   const filtered = courses.filter(
@@ -81,38 +83,53 @@ export default function CoursScreen() {
         contentContainerStyle={[styles.list, { paddingBottom: bottomPad }]}
         showsVerticalScrollIndicator={false}
         scrollEnabled={!!filtered.length}
-        renderItem={({ item: course }) => (
-          <TouchableOpacity
-            style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => router.push(`/cours/${course.id}`)}
-            activeOpacity={0.75}
-          >
-            <View style={styles.cardLeft}>
-              <View style={[styles.iconBox, { backgroundColor: colors.primary }]}>
-                <Ionicons name="book" size={18} color={colors.primaryForeground} />
+        renderItem={({ item: course }) => {
+          const stats = courseStats(course.chapters);
+          return (
+            <TouchableOpacity
+              style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+              onPress={() => router.push(`/cours/${course.id}`)}
+              activeOpacity={0.75}
+            >
+              <View style={styles.cardTop}>
+                <View style={styles.cardLeft}>
+                  <View style={[styles.iconBox, { backgroundColor: colors.primary }]}>
+                    <Ionicons name="book" size={18} color={colors.primaryForeground} />
+                  </View>
+                  <View style={styles.cardInfo}>
+                    <Text style={[styles.cardTitle, { color: colors.foreground }]} numberOfLines={2}>
+                      {course.title}
+                    </Text>
+                    <View style={styles.cardMeta}>
+                      <Text style={[styles.metaText, { color: colors.mutedForeground }]}>
+                        {course.subject}
+                      </Text>
+                      <Text style={[styles.metaDot, { color: colors.border }]}>·</Text>
+                      <Text style={[styles.metaText, { color: colors.mutedForeground }]}>
+                        {course.level}
+                      </Text>
+                      <Text style={[styles.metaDot, { color: colors.border }]}>·</Text>
+                      <Text style={[styles.metaText, { color: colors.mutedForeground }]}>
+                        {course.chapters.length} ch.
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.border} />
               </View>
-              <View style={styles.cardInfo}>
-                <Text style={[styles.cardTitle, { color: colors.foreground }]} numberOfLines={2}>
-                  {course.title}
-                </Text>
-                <View style={styles.cardMeta}>
-                  <Text style={[styles.metaText, { color: colors.mutedForeground }]}>
-                    {course.subject}
-                  </Text>
-                  <Text style={[styles.metaDot, { color: colors.border }]}>·</Text>
-                  <Text style={[styles.metaText, { color: colors.mutedForeground }]}>
-                    {course.level}
-                  </Text>
-                  <Text style={[styles.metaDot, { color: colors.border }]}>·</Text>
-                  <Text style={[styles.metaText, { color: colors.mutedForeground }]}>
-                    {course.chapters.length} ch.
+              {stats.done > 0 && (
+                <View style={styles.progressBox}>
+                  <View style={[styles.progressBg, { backgroundColor: colors.muted }]}>
+                    <View style={[styles.progressFill, { backgroundColor: colors.primary, width: `${stats.pct}%` }]} />
+                  </View>
+                  <Text style={[styles.progressText, { color: colors.mutedForeground }]}>
+                    {stats.done}/{stats.total} chapitres · {stats.pct}%
                   </Text>
                 </View>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.border} />
-          </TouchableOpacity>
-        )}
+              )}
+            </TouchableOpacity>
+          );
+        }}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Ionicons name="book-outline" size={36} color={colors.mutedForeground} />

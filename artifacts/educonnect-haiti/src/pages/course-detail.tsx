@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useRoute, Link, useLocation } from "wouter";
-import { ArrowLeft, ArrowRight, DownloadCloud, CheckCircle2, PlayCircle, BookText, PenTool, Check, X, Lightbulb } from "lucide-react";
+import { ArrowLeft, ArrowRight, DownloadCloud, CheckCircle2, PlayCircle, BookText, PenTool, Check, X, Lightbulb, Layers } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useProgress } from "@/hooks/use-progress";
 import { courses } from "@/data/courses";
 import { getLessonVideo, getYoutubeId } from "@/lib/lesson-storage";
 import { toast } from "sonner";
@@ -17,6 +18,7 @@ export default function CourseDetail() {
   const nextCourse = courseIndex >= 0 ? courses[courseIndex + 1] : undefined;
 
   const [downloadedCourses, setDownloadedCourses] = useLocalStorage<Record<string, boolean>>("downloaded-courses", {});
+  const { isDone, toggle: toggleDone, courseStats } = useProgress();
   const [activeChapterId, setActiveChapterId] = useState(course?.chapters[0]?.id);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState<Record<string, boolean>>({});
@@ -133,7 +135,7 @@ export default function CourseDetail() {
           </Link>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div className="max-w-2xl space-y-4">
-              <div className="flex gap-3">
+              <div className="flex gap-3 flex-wrap">
                 <span className="inline-flex items-center rounded-md bg-white/20 px-2 py-1 text-xs font-medium text-white ring-1 ring-inset ring-white/20">
                   {course.subject}
                 </span>
@@ -143,18 +145,40 @@ export default function CourseDetail() {
               </div>
               <h1 className="text-3xl md:text-5xl font-bold font-serif leading-tight">{course.title}</h1>
               <p className="text-primary-foreground/80 text-lg">{course.description}</p>
+              {/* Progress bar */}
+              {(() => {
+                const stats = courseStats(course.chapters);
+                return (
+                  <div className="space-y-1.5 max-w-xs">
+                    <div className="flex justify-between text-xs text-primary-foreground/70">
+                      <span>{stats.done}/{stats.total} chapitres terminés</span>
+                      <span className="font-bold">{stats.pct}%</span>
+                    </div>
+                    <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                      <div className="h-full bg-white rounded-full transition-all duration-500" style={{ width: `${stats.pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
-            <Button 
-              onClick={handleDownload}
-              variant={isDownloaded ? "outline" : "secondary"} 
-              className={isDownloaded ? "bg-green-500/20 text-white border-green-400 hover:bg-green-500/30" : "font-bold"}
-            >
-              {isDownloaded ? (
-                <><CheckCircle2 className="mr-2 h-4 w-4" /> Disponible hors-ligne</>
-              ) : (
-                <><DownloadCloud className="mr-2 h-4 w-4" /> Télécharger (Hors-ligne)</>
-              )}
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button 
+                onClick={handleDownload}
+                variant={isDownloaded ? "outline" : "secondary"} 
+                className={isDownloaded ? "bg-green-500/20 text-white border-green-400 hover:bg-green-500/30" : "font-bold"}
+              >
+                {isDownloaded ? (
+                  <><CheckCircle2 className="mr-2 h-4 w-4" /> Disponible hors-ligne</>
+                ) : (
+                  <><DownloadCloud className="mr-2 h-4 w-4" /> Télécharger (Hors-ligne)</>
+                )}
+              </Button>
+              <Link href={`/fiches/${courseId}`}>
+                <Button variant="outline" className="w-full border-white/40 text-white hover:bg-white/10">
+                  <Layers className="mr-2 h-4 w-4" /> Fiches de révision
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -190,28 +214,35 @@ export default function CourseDetail() {
           <div className="hidden lg:block w-1/3 xl:w-1/4 space-y-4">
             <h3 className="font-bold text-lg mb-4">Contenu du cours</h3>
             <div className="flex flex-col space-y-2">
-              {course.chapters.map((chapter, idx) => (
-                <button
-                  key={chapter.id}
-                  onClick={() => setActiveChapterId(chapter.id)}
-                  className={`text-left p-4 rounded-xl border transition-all ${
-                    activeChapterId === chapter.id 
-                      ? "bg-primary/5 border-primary shadow-sm ring-1 ring-primary/20" 
-                      : "bg-card hover:bg-muted"
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className={`mt-0.5 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shrink-0 ${
-                      activeChapterId === chapter.id ? "bg-primary text-white" : "bg-muted-foreground/20 text-muted-foreground"
-                    }`}>
-                      {idx + 1}
+              {course.chapters.map((chapter, idx) => {
+                const done = isDone(chapter.id);
+                return (
+                  <button
+                    key={chapter.id}
+                    onClick={() => setActiveChapterId(chapter.id)}
+                    className={`text-left p-4 rounded-xl border transition-all ${
+                      activeChapterId === chapter.id 
+                        ? "bg-primary/5 border-primary shadow-sm ring-1 ring-primary/20" 
+                        : "bg-card hover:bg-muted"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      {done ? (
+                        <CheckCircle2 className="w-6 h-6 text-green-500 shrink-0 mt-0.5" />
+                      ) : (
+                        <div className={`mt-0.5 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shrink-0 ${
+                          activeChapterId === chapter.id ? "bg-primary text-white" : "bg-muted-foreground/20 text-muted-foreground"
+                        }`}>
+                          {idx + 1}
+                        </div>
+                      )}
+                      <span className={`font-medium ${done ? "text-green-700 dark:text-green-400" : activeChapterId === chapter.id ? "text-primary" : "text-foreground"}`}>
+                        {chapter.title}
+                      </span>
                     </div>
-                    <span className={`font-medium ${activeChapterId === chapter.id ? "text-primary" : "text-foreground"}`}>
-                      {chapter.title}
-                    </span>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -409,6 +440,24 @@ export default function CourseDetail() {
                   </Button>
                 </div>
               )}
+
+              {/* Chapter completion toggle */}
+              <div className="pt-6 border-t mt-4">
+                <button
+                  onClick={() => {
+                    toggleDone(activeChapter.id);
+                    if (!isDone(activeChapter.id)) toast.success("Chapitre marqué comme terminé !");
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
+                    isDone(activeChapter.id)
+                      ? "bg-green-50 border-green-300 text-green-700 dark:bg-green-950/30 dark:border-green-700 dark:text-green-400"
+                      : "bg-card border-border text-muted-foreground hover:border-green-300 hover:text-green-600"
+                  }`}
+                >
+                  <CheckCircle2 className={`w-5 h-5 ${isDone(activeChapter.id) ? "text-green-500" : "text-muted-foreground/40"}`} />
+                  {isDone(activeChapter.id) ? "Chapitre terminé ✓" : "Marquer comme terminé"}
+                </button>
+              </div>
 
               {submitted[activeChapter.id] && (
                 <div className="pt-6 border-t mt-8 flex flex-col sm:flex-row gap-4 items-center bg-muted/30 p-6 rounded-xl">

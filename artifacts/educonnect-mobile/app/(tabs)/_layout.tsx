@@ -1,37 +1,12 @@
 import { BlurView } from "expo-blur";
-import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
-import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
-import { SymbolView } from "expo-symbols";
 import { Ionicons } from "@expo/vector-icons";
+import { SymbolView } from "expo-symbols";
 import React from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 import { useColors } from "@/hooks/useColors";
 
-function NativeTabLayout() {
-  return (
-    <NativeTabs>
-      <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>Accueil</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="cours">
-        <Icon sf={{ default: "book", selected: "book.fill" }} />
-        <Label>Cours</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="orientation">
-        <Icon sf={{ default: "location", selected: "location.fill" }} />
-        <Label>Orientation</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="infos">
-        <Icon sf={{ default: "info.circle", selected: "info.circle.fill" }} />
-        <Label>Infos</Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
-  );
-}
-
-function ClassicTabLayout() {
+export default function TabLayout() {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -54,7 +29,7 @@ function ClassicTabLayout() {
         },
         tabBarLabelStyle: {
           fontFamily: "Inter_500Medium",
-          fontSize: 11,
+          fontSize: 10,
         },
         tabBarBackground: () =>
           isIOS ? (
@@ -93,6 +68,30 @@ function ClassicTabLayout() {
         }}
       />
       <Tabs.Screen
+        name="fiches"
+        options={{
+          title: "Fiches",
+          tabBarIcon: ({ color, size }) =>
+            isIOS ? (
+              <SymbolView name="rectangle.on.rectangle" tintColor={color} size={size} />
+            ) : (
+              <Ionicons name="layers" size={size} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="planning"
+        options={{
+          title: "Planning",
+          tabBarIcon: ({ color, size }) =>
+            isIOS ? (
+              <SymbolView name="calendar" tintColor={color} size={size} />
+            ) : (
+              <Ionicons name="calendar" size={size} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
         name="orientation"
         options={{
           title: "Orientation",
@@ -118,11 +117,4 @@ function ClassicTabLayout() {
       />
     </Tabs>
   );
-}
-
-export default function TabLayout() {
-  if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
-  }
-  return <ClassicTabLayout />;
 }

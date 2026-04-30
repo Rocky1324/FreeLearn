@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Search, Filter, PlayCircle, DownloadCloud, CheckCircle2 } from "lucide-react";
+import { Search, Filter, PlayCircle, CheckCircle2 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { courses } from "@/data/courses";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useProgress } from "@/hooks/use-progress";
 
 const LEVEL_GROUPS = [
   { label: "Tous les niveaux", value: "Tous" },
@@ -20,6 +21,7 @@ export default function Courses() {
   const [selectedSubject, setSelectedSubject] = useState<string>("Tous");
   const [selectedLevelGroup, setSelectedLevelGroup] = useState<string>("Tous");
   const [downloadedCourses] = useLocalStorage<Record<string, boolean>>("downloaded-courses", {});
+  const { courseStats } = useProgress();
 
   const allSubjects = ["Tous", ...Array.from(new Set(courses.map(c => c.subject))).sort()];
 
@@ -126,6 +128,23 @@ export default function Courses() {
                         </div>
                         <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{course.title}</h3>
                         <p className="text-muted-foreground text-sm line-clamp-2">{course.description}</p>
+                      </div>
+                      <div className="px-6 pb-3 pt-1">
+                        {(() => {
+                          const stats = courseStats(course.chapters);
+                          if (stats.done === 0) return null;
+                          return (
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-xs text-muted-foreground">
+                                <span>{stats.done}/{stats.total} chapitres</span>
+                                <span className="font-semibold text-primary">{stats.pct}%</span>
+                              </div>
+                              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${stats.pct}%` }} />
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                       <div className="px-6 py-4 border-t bg-muted/10 flex justify-between items-center">
                         <span className="text-sm font-medium flex items-center text-muted-foreground">
