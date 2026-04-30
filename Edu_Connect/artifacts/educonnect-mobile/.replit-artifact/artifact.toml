@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/mobile/"
+title = "EduConnect Haïti Mobile"
+version = "1.0.0"
+id = "artifacts/educonnect-mobile"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/mobile/" ]
+localPort = 24349
+
+[services.development]
+run = "pnpm --filter @workspace/educonnect-mobile run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/educonnect-mobile", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/educonnect-mobile", "run", "serve" ]
+
+[services.env]
+PORT = "24349"
+BASE_PATH = "/mobile/"

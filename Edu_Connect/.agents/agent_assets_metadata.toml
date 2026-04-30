@@ -1,0 +1,26 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "wDh0vC9dVZKN7GHuX_qxp"
+uri = "file://src/assets/images/hero.png"
+type = "image"
+title = "Haitian students learning library"
+
+[[generated]]
+id = "M2sNiHFr6XFkDz-aqA5lf"
+uri = "file://src/assets/images/centre.png"
+type = "image"
+title = "Haiti community centre"
+
+[[generated]]
+id = "OFCy01WmJsaZRUtYomxNW"
+uri = "file://artifacts/educonnect-haiti/src/assets/images/hero.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "hS7Wx-70Jg8zjG-4DndGP"
+uri = "file://artifacts/educonnect-haiti/src/assets/images/centre.png"
+type = "image"
+title = "generated_image"
