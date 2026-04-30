@@ -1,0 +1,51 @@
+databases:
+  # 1. PostgreSQL Database
+  - name: educonnect-db
+    databaseName: educonnect
+    user: educonnect
+    plan: free
+    region: ohio
+
+services:
+  # 2. Backend API Service
+  - type: web
+    name: educonnect-api
+    env: node
+    plan: free
+    region: ohio
+    buildCommand: pnpm install && pnpm --filter @workspace/api-server build
+    startCommand: cd artifacts/api-server && pnpm start
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: PNPM_VERSION
+        value: "10.33.2"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: educonnect-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+
+  # 3. Frontend Static Site
+  - type: web
+    name: educonnect-frontend
+    env: static
+    buildCommand: npm install -g pnpm@10.33.2 && pnpm install && pnpm --filter @workspace/educonnect-haiti build
+    staticPublishPath: ./artifacts/educonnect-haiti/dist/public
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: PNPM_VERSION
+        value: "10.33.2"
+      - key: NODE_ENV
+        value: production
+      - key: BASE_PATH
+        value: "/"
+      - key: PORT
+        value: "3000"
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: educonnect-api
+          property: host
