@@ -194,7 +194,7 @@ const makeStyles = (colors: ReturnType<typeof useColors>) =>
       gap: 8,
     },
     searchInput: { flex: 1, fontSize: 15, padding: 0 },
-    chips: { paddingHorizontal: 16, paddingVertical: 10, gap: 8, alignItems: "center" },
+    chips: { paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
     chip: {
       paddingHorizontal: 14,
       height: 34,
