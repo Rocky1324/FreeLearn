@@ -77,7 +77,7 @@ export default function Home() {
       {/* Key Stats */}
       <section className="py-12 bg-background border-b">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center divide-x divide-border">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center [&>div]:border-l [&>div:nth-child(odd)]:border-l-0 md:[&>div]:border-l md:[&>div:first-child]:border-l-0">
             <div className="space-y-2">
               <h3 className="text-4xl font-bold font-serif text-primary">12+</h3>
               <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Cours Complets</p>

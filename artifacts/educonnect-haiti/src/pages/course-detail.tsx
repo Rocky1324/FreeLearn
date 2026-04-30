@@ -159,10 +159,35 @@ export default function CourseDetail() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-12">
+      {/* Mobile chapter tabs (horizontal scroll) */}
+      <div className="lg:hidden border-b bg-card overflow-x-auto flex-none">
+        <div className="flex min-w-max px-4 py-3 gap-2">
+          {course.chapters.map((chapter, idx) => (
+            <button
+              key={chapter.id}
+              onClick={() => {
+                setActiveChapterId(chapter.id);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium whitespace-nowrap transition-all ${
+                activeChapterId === chapter.id
+                  ? "bg-primary/5 border-primary text-primary"
+                  : "bg-background border-border text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              <span className={`w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center shrink-0 ${
+                activeChapterId === chapter.id ? "bg-primary text-white" : "bg-muted-foreground/20 text-muted-foreground"
+              }`}>{idx + 1}</span>
+              Ch. {idx + 1}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8 lg:py-12">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Chapter Navigation */}
-          <div className="w-full lg:w-1/3 xl:w-1/4 space-y-4">
+          {/* Chapter Navigation — desktop sidebar only */}
+          <div className="hidden lg:block w-1/3 xl:w-1/4 space-y-4">
             <h3 className="font-bold text-lg mb-4">Contenu du cours</h3>
             <div className="flex flex-col space-y-2">
               {course.chapters.map((chapter, idx) => (
