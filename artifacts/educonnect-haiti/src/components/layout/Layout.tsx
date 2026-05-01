@@ -1,15 +1,31 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { BookOpen, Menu, X, Globe, WifiOff, MapPin, Moon, Sun, Layers, Calendar } from "lucide-react";
+import {
+  BookOpen,
+  Menu,
+  X,
+  Globe,
+  WifiOff,
+  MapPin,
+  Moon,
+  Sun,
+  Layers,
+  Calendar,
+  LogOut,
+  User,
+  LogIn,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useTheme } from "@/hooks/use-theme";
+import { useAuth } from "@/hooks/use-auth";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [lowConnexion, setLowConnexion] = useLocalStorage("connexion-faible", false);
   const [location] = useLocation();
   const { theme, toggle: toggleTheme } = useTheme();
+  const { user, isAuthenticated, logout } = useAuth();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -18,11 +34,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/cours", label: "Cours" },
     { href: "/fiches", label: "Fiches" },
     { href: "/calendrier", label: "Calendrier" },
-    { href: "/orientation", label: "Orientation" },
-    { href: "/opportunites", label: "Opportunités" },
+    { href: "/ecoles", label: "Écoles" },
     { href: "/centres", label: "Centres" },
-    { href: "/admin", label: "Enseignants" },
+    { href: "/opportunites", label: "Opportunités" },
+    { href: "/orientation", label: "Orientation" },
   ];
+
+  const handleLogout = async () => {
+    await logout();
+    setIsMenuOpen(false);
+  };
 
   return (
     <div className={`min-h-screen flex flex-col ${lowConnexion ? "connexion-faible" : ""}`}>
@@ -38,7 +59,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center space-x-5">
+          <nav className="hidden lg:flex items-center space-x-4">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -62,9 +83,37 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
 
-            <div className="hidden sm:flex items-center text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md">
-              <Globe className="h-3 w-3 mr-1" />
-              <span>Hors-ligne</span>
+            {/* Auth buttons — desktop */}
+            <div className="hidden lg:flex items-center space-x-2">
+              {isAuthenticated && user ? (
+                <>
+                  {user.role === "admin" || user.role === "teacher" ? (
+                    <Link href="/admin">
+                      <Button variant="ghost" size="sm" className="gap-1.5">
+                        <User className="h-4 w-4" />
+                        <span className="max-w-[100px] truncate">{user.fullName}</span>
+                      </Button>
+                    </Link>
+                  ) : (
+                    <span className="text-sm text-muted-foreground flex items-center gap-1.5 px-2">
+                      <User className="h-4 w-4" />
+                      <span className="max-w-[100px] truncate">{user.fullName}</span>
+                    </span>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground">
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link href="/connexion">
+                    <Button variant="ghost" size="sm">Se connecter</Button>
+                  </Link>
+                  <Link href="/inscription">
+                    <Button size="sm">S'inscrire</Button>
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Toggle */}
@@ -92,6 +141,46 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   {link.label}
                 </Link>
               ))}
+              <div className="pt-2 border-t mt-2 space-y-1">
+                {isAuthenticated && user ? (
+                  <>
+                    <div className="px-3 py-2 text-sm text-muted-foreground flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      {user.fullName}
+                    </div>
+                    {(user.role === "admin" || user.role === "teacher") && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="text-sm font-medium py-2 px-3 rounded-lg block text-muted-foreground hover:bg-muted"
+                      >
+                        Espace enseignant
+                      </Link>
+                    )}
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left text-sm font-medium py-2 px-3 rounded-lg text-destructive hover:bg-destructive/10 flex items-center gap-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Se déconnecter
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/connexion"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="text-sm font-medium py-2 px-3 rounded-lg block text-muted-foreground hover:bg-muted flex items-center gap-2"
+                    >
+                      <LogIn className="h-4 w-4" />
+                      Se connecter
+                    </Link>
+                    <Link href="/inscription" onClick={() => setIsMenuOpen(false)}>
+                      <Button size="sm" className="w-full mt-1">S'inscrire gratuitement</Button>
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -134,12 +223,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           <div className="space-y-4">
             <h4 className="font-bold text-lg">Ressources</h4>
-            <ul className="space-y-2 text-primary-foreground/80 space-y-2">
+            <ul className="space-y-2 text-primary-foreground/80">
               <li><Link href="/cours">Catalogue de cours</Link></li>
               <li className="flex items-center gap-1.5"><Layers className="h-3.5 w-3.5" /><Link href="/fiches">Fiches de révision</Link></li>
               <li className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /><Link href="/calendrier">Calendrier d'étude</Link></li>
+              <li><Link href="/ecoles">Carte des écoles</Link></li>
               <li><Link href="/opportunites">Bourses et concours</Link></li>
-              <li><Link href="/admin">Espace enseignant</Link></li>
             </ul>
           </div>
         </div>
