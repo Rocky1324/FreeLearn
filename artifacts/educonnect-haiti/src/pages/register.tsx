@@ -56,7 +56,7 @@ export default function Register() {
     setLoading(true);
     try {
       await register(email.trim(), password, fullName.trim());
-      navigate("/");
+      navigate("/cours");
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);

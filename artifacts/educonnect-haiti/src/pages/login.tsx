@@ -21,7 +21,7 @@ export default function Login() {
     setLoading(true);
     try {
       await login(email.trim(), password);
-      navigate("/");
+      navigate("/cours");
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);

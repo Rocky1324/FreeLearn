@@ -30,7 +30,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const navLinks = [
-    { href: "/", label: "Accueil" },
     { href: "/cours", label: "Cours" },
     { href: "/fiches", label: "Fiches" },
     { href: "/calendrier", label: "Calendrier" },
@@ -58,20 +57,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <span className="font-serif font-bold text-xl text-primary sm:hidden">EduConnect</span>
           </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center space-x-4">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  location === link.href ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+          {/* Desktop Nav — only for authenticated users */}
+          {isAuthenticated && (
+            <nav className="hidden lg:flex items-center space-x-4">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`text-sm font-medium transition-colors hover:text-primary ${
+                    location === link.href ? "text-primary" : "text-muted-foreground"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          )}
 
           <div className="flex items-center space-x-2">
             {/* Dark mode toggle */}
@@ -127,7 +128,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {isMenuOpen && (
           <div className="lg:hidden border-b bg-background">
             <div className="container py-4 flex flex-col space-y-1 px-4 mx-auto">
-              {navLinks.map((link) => (
+              {isAuthenticated && navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}

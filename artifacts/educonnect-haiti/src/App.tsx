@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
@@ -32,43 +32,140 @@ const queryClient = new QueryClient({
   },
 });
 
+function LoadingScreen() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  );
+}
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) return <LoadingScreen />;
+  if (!isAuthenticated) return <Redirect to="/" />;
+
+  return <>{children}</>;
+}
+
 function ProtectedAdmin() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const [, navigate] = useLocation();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+  if (isLoading) return <LoadingScreen />;
+
+  if (!isAuthenticated) {
+    navigate("/");
+    return null;
   }
 
-  if (!isAuthenticated || (user?.role !== "admin" && user?.role !== "teacher")) {
-    navigate("/connexion");
+  if (user?.role !== "admin" && user?.role !== "teacher") {
+    navigate("/cours");
     return null;
   }
 
   return <Admin />;
 }
 
+function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) return <LoadingScreen />;
+  if (isAuthenticated) return <Redirect to="/cours" />;
+
+  return <>{children}</>;
+}
+
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/cours" component={Courses} />
-      <Route path="/cours/:id" component={CourseDetail} />
-      <Route path="/orientation" component={Orientation} />
-      <Route path="/opportunites" component={Opportunities} />
-      <Route path="/centres" component={Centers} />
-      <Route path="/ecoles" component={Schools} />
-      <Route path="/a-propos" component={About} />
+      {/* Public routes — accessible without login */}
+      <Route path="/">
+        <PublicOnlyRoute>
+          <Home />
+        </PublicOnlyRoute>
+      </Route>
+
+      <Route path="/connexion">
+        <PublicOnlyRoute>
+          <Login />
+        </PublicOnlyRoute>
+      </Route>
+
+      <Route path="/inscription">
+        <PublicOnlyRoute>
+          <Register />
+        </PublicOnlyRoute>
+      </Route>
+
+      {/* Protected routes — require authentication */}
+      <Route path="/cours">
+        <ProtectedRoute>
+          <Courses />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/cours/:id">
+        {(params) => (
+          <ProtectedRoute>
+            <CourseDetail />
+          </ProtectedRoute>
+        )}
+      </Route>
+
+      <Route path="/orientation">
+        <ProtectedRoute>
+          <Orientation />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/opportunites">
+        <ProtectedRoute>
+          <Opportunities />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/centres">
+        <ProtectedRoute>
+          <Centers />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/ecoles">
+        <ProtectedRoute>
+          <Schools />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/a-propos">
+        <ProtectedRoute>
+          <About />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/fiches">
+        <ProtectedRoute>
+          <Flashcards />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/fiches/:courseId">
+        {(params) => (
+          <ProtectedRoute>
+            <Flashcards />
+          </ProtectedRoute>
+        )}
+      </Route>
+
+      <Route path="/calendrier">
+        <ProtectedRoute>
+          <CalendarPage />
+        </ProtectedRoute>
+      </Route>
+
       <Route path="/admin" component={ProtectedAdmin} />
-      <Route path="/fiches" component={Flashcards} />
-      <Route path="/fiches/:courseId" component={Flashcards} />
-      <Route path="/calendrier" component={CalendarPage} />
-      <Route path="/connexion" component={Login} />
-      <Route path="/inscription" component={Register} />
+
       <Route component={NotFound} />
     </Switch>
   );
