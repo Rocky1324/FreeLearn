@@ -4,21 +4,23 @@
     "slug": "educonnect-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/Logo.jpeg",
     "scheme": "educonnect-mobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/icon.png",
+      "image": "./assets/images/Logo.jpeg",
       "resizeMode": "contain",
       "backgroundColor": "#00205B"
     },
     "ios": {
       "supportsTablet": false
     },
-    "android": {},
+    "android": {
+      "package": "com.educonnect.haiti"
+    },
     "web": {
-      "favicon": "./assets/images/icon.png"
+      "favicon": "./assets/images/Logo.jpeg"
     },
     "plugins": [
       [

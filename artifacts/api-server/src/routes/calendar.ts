@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { db, calendarSessionsTable } from "@workspace/db";
-import { authenticate } from "../middlewares/authenticate.js";
 import { eq, and } from "drizzle-orm";
+import { authenticate, type AuthenticatedRequest } from "../middlewares/authenticate.js";
 
 const router = Router();
 
-router.get("/", authenticate, async (req, res) => {
+router.get("/", authenticate as import("express").RequestHandler, async (req: AuthenticatedRequest, res) => {
   const userId = req.user!.sub;
   const rows = await db
     .select()
@@ -14,14 +14,14 @@ router.get("/", authenticate, async (req, res) => {
     .orderBy(calendarSessionsTable.date);
 
   const data: Record<string, { id: number; courseId: string; durationMinutes: number }[]> = {};
-  for (const r of rows) {
-    if (!data[r.date]) data[r.date] = [];
-    data[r.date].push({ id: r.id, courseId: r.courseId, durationMinutes: r.durationMinutes });
+  for (const row of rows) {
+    if (!data[row.date]) data[row.date] = [];
+    data[row.date].push({ id: row.id, courseId: row.courseId, durationMinutes: row.durationMinutes });
   }
   res.json({ data });
 });
 
-router.post("/", authenticate, async (req, res) => {
+router.post("/", authenticate as import("express").RequestHandler, async (req: AuthenticatedRequest, res) => {
   const userId = req.user!.sub;
   const { date, courseId, durationMinutes } = req.body as {
     date?: string;
@@ -42,7 +42,7 @@ router.post("/", authenticate, async (req, res) => {
   res.status(201).json({ session: row });
 });
 
-router.delete("/:sessionId", authenticate, async (req, res) => {
+router.delete("/:sessionId", authenticate as import("express").RequestHandler, async (req: AuthenticatedRequest, res) => {
   const userId = req.user!.sub;
   const sessionId = parseInt(req.params.sessionId, 10);
 
@@ -51,20 +51,14 @@ router.delete("/:sessionId", authenticate, async (req, res) => {
     return;
   }
 
-  const deleted = await db
+  await db
     .delete(calendarSessionsTable)
     .where(
       and(
         eq(calendarSessionsTable.id, sessionId),
         eq(calendarSessionsTable.userId, userId),
       ),
-    )
-    .returning();
-
-  if (deleted.length === 0) {
-    res.status(404).json({ error: "Session introuvable" });
-    return;
-  }
+    );
 
   res.json({ message: "Session supprimée" });
 });

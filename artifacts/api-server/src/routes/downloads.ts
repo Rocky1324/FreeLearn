@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { db, downloadedCoursesTable } from "@workspace/db";
-import { authenticate } from "../middlewares/authenticate.js";
 import { eq, and } from "drizzle-orm";
+import { authenticate, type AuthenticatedRequest } from "../middlewares/authenticate.js";
 
 const router = Router();
 
-router.get("/", authenticate, async (req, res) => {
+router.get("/", authenticate as import("express").RequestHandler, async (req: AuthenticatedRequest, res) => {
   const userId = req.user!.sub;
   const rows = await db
     .select()
@@ -13,25 +13,35 @@ router.get("/", authenticate, async (req, res) => {
     .where(eq(downloadedCoursesTable.userId, userId));
 
   const downloaded: Record<string, boolean> = {};
-  for (const r of rows) {
-    downloaded[r.courseId] = true;
+  for (const row of rows) {
+    downloaded[row.courseId] = true;
   }
   res.json({ downloaded });
 });
 
-router.post("/:courseId", authenticate, async (req, res) => {
+router.post("/:courseId", authenticate as import("express").RequestHandler, async (req: AuthenticatedRequest, res) => {
   const userId = req.user!.sub;
   const { courseId } = req.params;
 
-  await db
-    .insert(downloadedCoursesTable)
-    .values({ userId, courseId })
-    .onConflictDoNothing();
+  const [existing] = await db
+    .select()
+    .from(downloadedCoursesTable)
+    .where(
+      and(
+        eq(downloadedCoursesTable.userId, userId),
+        eq(downloadedCoursesTable.courseId, courseId),
+      ),
+    )
+    .limit(1);
+
+  if (!existing) {
+    await db.insert(downloadedCoursesTable).values({ userId, courseId });
+  }
 
   res.status(201).json({ downloaded: true });
 });
 
-router.delete("/:courseId", authenticate, async (req, res) => {
+router.delete("/:courseId", authenticate as import("express").RequestHandler, async (req: AuthenticatedRequest, res) => {
   const userId = req.user!.sub;
   const { courseId } = req.params;
 

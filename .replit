@@ -9,9 +9,31 @@ args = ["pnpm", "store", "prune"]
 env = { "CI" = "true" }
 
 [workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=19941 BASE_PATH=/ pnpm --filter @workspace/educonnect-haiti run dev"
+waitForPort = 19941
 
 [agent]
-stack = "BEST_EFFORT_FALLBACK"
+stack = "PNPM_WORKSPACE"
 expertMode = true
 
 [postMerge]
@@ -73,12 +95,3 @@ externalPort = 8000
 [[ports]]
 localPort = 24350
 externalPort = 8008
-
-[userenv]
-
-[userenv.shared]
-JWT_SECRET = "28d4fee7f58f784311ad9dce1aed2020eea7a4816173c7b5812f3aec61804a16e184254214f39d6d2e7dda41eb1009b3c14e849e5c8f67bab453c4e6cd96f35b"
-JWT_REFRESH_SECRET = "7588806d879034c54e5fbef50ff1114a42fbeae8fae7f73d33d85b1cc956cee7f936f610798465bf094541e8610ca970f7130bc42d378c500af3bfd8cd136183"
-JWT_EXPIRES_IN = "15m"
-JWT_REFRESH_EXPIRES_IN = "7d"
-COOKIE_DOMAIN = ""

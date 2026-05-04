@@ -1,0 +1,17 @@
+{
+  "name": "EduConnect Haïti",
+  "short_name": "EduConnect",
+  "description": "Plateforme d'éducation et d'orientation pour Haïti",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#00205B",
+  "icons": [
+    {
+      "src": "/Logo.jpeg",
+      "sizes": "192x192 512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

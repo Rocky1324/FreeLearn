@@ -1,118 +1,87 @@
-const API_BASE = "/api";
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-async function request<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
+async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${BASE}/api${path}`, {
     credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
+    headers: { "Content-Type": "application/json", ...(options?.headers ?? {}) },
+    ...options,
   });
-
   if (!res.ok) {
-    let errorMessage = "Une erreur est survenue";
-    try {
-      const data = await res.json();
-      errorMessage = data.error ?? errorMessage;
-    } catch {
-      // ignore
-    }
-    throw new ApiError(errorMessage, res.status);
+    const body = await res.json().catch(() => ({}));
+    throw new Error((body as { error?: string }).error ?? `HTTP ${res.status}`);
   }
-
   return res.json() as Promise<T>;
 }
 
-export class ApiError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-  ) {
-    super(message);
-    this.name = "ApiError";
-  }
-}
-
-export type SafeUser = {
-  id: number;
-  email: string;
-  fullName: string;
-  role: "student" | "teacher" | "admin";
-  isVerified: boolean;
-  lastLogin: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
-
 export const authApi = {
   register: (data: { email: string; password: string; fullName: string }) =>
-    request<{ user: SafeUser }>("/auth/register", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-
+    apiFetch<{ user: User }>("/auth/register", { method: "POST", body: JSON.stringify(data) }),
   login: (data: { email: string; password: string }) =>
-    request<{ user: SafeUser }>("/auth/login", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-
-  logout: () =>
-    request<{ message: string }>("/auth/logout", { method: "POST" }),
-
-  me: () => request<{ user: SafeUser }>("/auth/me"),
-
-  refresh: () =>
-    request<{ user: SafeUser }>("/auth/refresh", { method: "POST" }),
+    apiFetch<{ user: User }>("/auth/login", { method: "POST", body: JSON.stringify(data) }),
+  logout: () => apiFetch<{ message: string }>("/auth/logout", { method: "POST" }),
+  me: () => apiFetch<{ user: User }>("/auth/me"),
+  refresh: () => apiFetch<{ user: User }>("/auth/refresh", { method: "POST" }),
 };
 
 export const progressApi = {
-  getAll: () => request<{ done: Record<string, boolean> }>("/progress"),
-
+  getAll: () => apiFetch<{ done: Record<string, boolean> }>("/progress"),
   toggle: (chapterId: string, courseId: string) =>
-    request<{ done: boolean }>(`/progress/${encodeURIComponent(chapterId)}`, {
+    apiFetch<{ done: boolean }>(`/progress/${chapterId}`, {
       method: "POST",
       body: JSON.stringify({ courseId }),
     }),
 };
 
-export type CalendarSession = {
-  id: number;
-  courseId: string;
-  durationMinutes: number;
-};
-
 export const calendarApi = {
-  getAll: () =>
-    request<{ data: Record<string, CalendarSession[]> }>("/calendar"),
-
-  add: (date: string, courseId: string, durationMinutes: number) =>
-    request<{ session: CalendarSession & { date: string } }>("/calendar", {
+  getAll: () => apiFetch<{ data: Record<string, { id: number; courseId: string; durationMinutes: number }[]> }>("/calendar"),
+  add: (data: { date: string; courseId: string; durationMinutes: number }) =>
+    apiFetch<{ session: CalendarSession }>("/calendar", {
       method: "POST",
-      body: JSON.stringify({ date, courseId, durationMinutes }),
+      body: JSON.stringify(data),
     }),
-
   remove: (sessionId: number) =>
-    request<{ message: string }>(`/calendar/${sessionId}`, {
-      method: "DELETE",
-    }),
+    apiFetch<{ message: string }>(`/calendar/${sessionId}`, { method: "DELETE" }),
 };
 
 export const downloadsApi = {
-  getAll: () =>
-    request<{ downloaded: Record<string, boolean> }>("/downloads"),
-
+  getAll: () => apiFetch<{ downloaded: Record<string, boolean> }>("/downloads"),
   add: (courseId: string) =>
-    request<{ downloaded: boolean }>(`/downloads/${encodeURIComponent(courseId)}`, {
-      method: "POST",
-    }),
-
+    apiFetch<{ downloaded: boolean }>(`/downloads/${courseId}`, { method: "POST" }),
   remove: (courseId: string) =>
-    request<{ downloaded: boolean }>(`/downloads/${encodeURIComponent(courseId)}`, {
+    apiFetch<{ downloaded: boolean }>(`/downloads/${courseId}`, { method: "DELETE" }),
+};
+
+export const videosApi = {
+  getAll: () => apiFetch<{ videos: Record<string, string> }>("/videos"),
+  set: (chapterId: string, youtubeUrl: string, adminKey?: string) =>
+    apiFetch<{ chapterId: string; youtubeId: string }>(`/videos/${chapterId}`, {
+      method: "PUT",
+      body: JSON.stringify({ youtubeUrl }),
+      headers: adminKey ? { "Content-Type": "application/json", "x-admin-key": adminKey } : undefined,
+    }),
+  remove: (chapterId: string, adminKey?: string) =>
+    apiFetch<{ message: string }>(`/videos/${chapterId}`, {
       method: "DELETE",
+      headers: adminKey ? { "Content-Type": "application/json", "x-admin-key": adminKey } : undefined,
     }),
 };
+
+export interface User {
+  id: number;
+  email: string;
+  fullName: string;
+  role: string;
+  isVerified: boolean;
+  lastLogin: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CalendarSession {
+  id: number;
+  userId: number;
+  date: string;
+  courseId: string;
+  durationMinutes: number;
+  createdAt: string;
+}

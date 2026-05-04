@@ -1,15 +1,13 @@
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
-import { BookOpen, GraduationCap, MapPin, HeartHandshake, ArrowRight, PlayCircle, Award, Briefcase, Search, UserPlus } from "lucide-react";
+import { BookOpen, GraduationCap, MapPin, HeartHandshake, ArrowRight, PlayCircle, Award, Briefcase, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import heroImg from "@/assets/images/hero.png";
 import { courses } from "@/data/courses";
 import { Layout } from "@/components/layout/Layout";
-import { useAuth } from "@/hooks/use-auth";
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
   const subjects = useMemo(
     () => ["Tous", ...Array.from(new Set(courses.map(c => c.subject)))],
     [],
@@ -60,36 +58,17 @@ export default function Home() {
               De Cité Soleil au Plateau Central, accédez gratuitement à des cours de qualité, des bourses d'études et une orientation personnalisée.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              {!isAuthenticated ? (
-                <>
-                  <Link href="/inscription">
-                    <Button size="lg" className="w-full sm:w-auto bg-secondary text-secondary-foreground hover:bg-secondary/90 font-bold">
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      S'inscrire gratuitement
-                    </Button>
-                  </Link>
-                  <Link href="/cours">
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                      Explorer les cours
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link href="/cours">
-                    <Button size="lg" className="w-full sm:w-auto bg-secondary text-secondary-foreground hover:bg-secondary/90 font-bold">
-                      Explorer les cours
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link href="/orientation">
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                      Faire le test d'orientation
-                    </Button>
-                  </Link>
-                </>
-              )}
+              <Link href="/cours">
+                <Button size="lg" className="w-full sm:w-auto bg-secondary text-secondary-foreground hover:bg-secondary/90 font-bold">
+                  Explorer les cours
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="/orientation">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+                  Faire le test d'orientation
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -320,36 +299,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Sign-up CTA — shown only to guests */}
-      {!isAuthenticated && (
-        <section className="py-20 bg-primary text-primary-foreground">
-          <div className="container mx-auto px-4 text-center space-y-6">
-            <h2 className="text-3xl md:text-4xl font-bold font-serif">
-              Prêt à commencer votre parcours ?
-            </h2>
-            <p className="text-primary-foreground/80 max-w-xl mx-auto text-lg">
-              Rejoignez EduConnect Haïti gratuitement. Accédez à tous les cours, fiches de révision, et opportunités en quelques secondes.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
-              <Link href="/inscription">
-                <Button size="lg" className="w-full sm:w-auto bg-secondary text-secondary-foreground hover:bg-secondary/90 font-bold px-8">
-                  <UserPlus className="mr-2 h-5 w-5" />
-                  Créer mon compte gratuit
-                </Button>
-              </Link>
-              <Link href="/connexion">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary px-8">
-                  Déjà inscrit ? Se connecter
-                </Button>
-              </Link>
-            </div>
-            <p className="text-primary-foreground/50 text-sm">
-              100% gratuit · Aucune carte bancaire requise · Disponible hors connexion
-            </p>
-          </div>
-        </section>
-      )}
     </Layout>
   );
 }

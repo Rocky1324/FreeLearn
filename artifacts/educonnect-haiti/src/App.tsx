@@ -1,14 +1,14 @@
-import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as SonnerToaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
 
-// Pages
 import Home from "@/pages/home";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
 import Courses from "@/pages/courses";
 import CourseDetail from "@/pages/course-detail";
 import Orientation from "@/pages/orientation";
@@ -19,153 +19,77 @@ import About from "@/pages/about";
 import Admin from "@/pages/admin";
 import Flashcards from "@/pages/flashcards";
 import CalendarPage from "@/pages/calendar";
-import Login from "@/pages/login";
-import Register from "@/pages/register";
+import ProgressDashboard from "@/pages/progress-dashboard";
 import NotFound from "@/pages/not-found";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 5 * 60 * 1000,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
-function LoadingScreen() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-    </div>
-  );
-}
-
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) return <LoadingScreen />;
-  if (!isAuthenticated) return <Redirect to="/" />;
-
-  return <>{children}</>;
-}
-
-function ProtectedAdmin() {
-  const { isAuthenticated, isLoading, user } = useAuth();
+function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+  const { user, loading } = useAuth();
   const [, navigate] = useLocation();
-
-  if (isLoading) return <LoadingScreen />;
-
-  if (!isAuthenticated) {
-    navigate("/");
-    return null;
-  }
-
-  if (user?.role !== "admin" && user?.role !== "teacher") {
-    navigate("/cours");
-    return null;
-  }
-
-  return <Admin />;
+  useEffect(() => {
+    if (!loading && !user) navigate("/connexion");
+  }, [user, loading, navigate]);
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Chargement…</div>;
+  if (!user) return null;
+  return <Component />;
 }
 
-function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) return <LoadingScreen />;
-  if (isAuthenticated) return <Redirect to="/cours" />;
-
-  return <>{children}</>;
+function PublicOnlyRoute({ component: Component }: { component: React.ComponentType }) {
+  const { user, loading } = useAuth();
+  const [, navigate] = useLocation();
+  useEffect(() => {
+    if (!loading && user) navigate("/cours");
+  }, [user, loading, navigate]);
+  if (loading) return null;
+  if (user) return null;
+  return <Component />;
 }
 
 function Router() {
   return (
     <Switch>
-      {/* Public routes — accessible without login */}
-      <Route path="/">
-        <PublicOnlyRoute>
-          <Home />
-        </PublicOnlyRoute>
-      </Route>
-
+      <Route path="/" component={Home} />
       <Route path="/connexion">
-        <PublicOnlyRoute>
-          <Login />
-        </PublicOnlyRoute>
+        <PublicOnlyRoute component={Login} />
       </Route>
-
       <Route path="/inscription">
-        <PublicOnlyRoute>
-          <Register />
-        </PublicOnlyRoute>
+        <PublicOnlyRoute component={Register} />
       </Route>
-
-      {/* Protected routes — require authentication */}
       <Route path="/cours">
-        <ProtectedRoute>
-          <Courses />
-        </ProtectedRoute>
+        <ProtectedRoute component={Courses} />
       </Route>
-
       <Route path="/cours/:id">
-        {(params) => (
-          <ProtectedRoute>
-            <CourseDetail />
-          </ProtectedRoute>
-        )}
+        <ProtectedRoute component={CourseDetail} />
       </Route>
-
+      <Route path="/progression">
+        <ProtectedRoute component={ProgressDashboard} />
+      </Route>
       <Route path="/orientation">
-        <ProtectedRoute>
-          <Orientation />
-        </ProtectedRoute>
+        <ProtectedRoute component={Orientation} />
       </Route>
-
       <Route path="/opportunites">
-        <ProtectedRoute>
-          <Opportunities />
-        </ProtectedRoute>
+        <ProtectedRoute component={Opportunities} />
       </Route>
-
       <Route path="/centres">
-        <ProtectedRoute>
-          <Centers />
-        </ProtectedRoute>
+        <ProtectedRoute component={Centers} />
       </Route>
-
       <Route path="/ecoles">
-        <ProtectedRoute>
-          <Schools />
-        </ProtectedRoute>
+        <ProtectedRoute component={Schools} />
       </Route>
-
-      <Route path="/a-propos">
-        <ProtectedRoute>
-          <About />
-        </ProtectedRoute>
+      <Route path="/a-propos" component={About} />
+      <Route path="/admin">
+        <ProtectedRoute component={Admin} />
       </Route>
-
       <Route path="/fiches">
-        <ProtectedRoute>
-          <Flashcards />
-        </ProtectedRoute>
+        <ProtectedRoute component={Flashcards} />
       </Route>
-
       <Route path="/fiches/:courseId">
-        {(params) => (
-          <ProtectedRoute>
-            <Flashcards />
-          </ProtectedRoute>
-        )}
+        <ProtectedRoute component={Flashcards} />
       </Route>
-
       <Route path="/calendrier">
-        <ProtectedRoute>
-          <CalendarPage />
-        </ProtectedRoute>
+        <ProtectedRoute component={CalendarPage} />
       </Route>
-
-      <Route path="/admin" component={ProtectedAdmin} />
-
       <Route component={NotFound} />
     </Switch>
   );
@@ -175,15 +99,14 @@ function App() {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <TooltipProvider>
+        <TooltipProvider>
+          <AuthProvider>
             <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
               <Router />
             </WouterRouter>
             <Toaster />
-            <SonnerToaster richColors position="top-right" />
-          </TooltipProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

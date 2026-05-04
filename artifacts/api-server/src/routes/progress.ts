@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { db, chapterProgressTable } from "@workspace/db";
-import { authenticate } from "../middlewares/authenticate.js";
 import { eq, and } from "drizzle-orm";
+import { authenticate, type AuthenticatedRequest } from "../middlewares/authenticate.js";
 
 const router = Router();
 
-router.get("/", authenticate, async (req, res) => {
+router.get("/", authenticate as import("express").RequestHandler, async (req: AuthenticatedRequest, res) => {
   const userId = req.user!.sub;
   const rows = await db
     .select()
@@ -13,13 +13,13 @@ router.get("/", authenticate, async (req, res) => {
     .where(eq(chapterProgressTable.userId, userId));
 
   const done: Record<string, boolean> = {};
-  for (const r of rows) {
-    done[r.chapterId] = true;
+  for (const row of rows) {
+    done[row.chapterId] = true;
   }
   res.json({ done });
 });
 
-router.post("/:chapterId", authenticate, async (req, res) => {
+router.post("/:chapterId", authenticate as import("express").RequestHandler, async (req: AuthenticatedRequest, res) => {
   const userId = req.user!.sub;
   const { chapterId } = req.params;
   const { courseId } = req.body as { courseId?: string };
@@ -29,7 +29,7 @@ router.post("/:chapterId", authenticate, async (req, res) => {
     return;
   }
 
-  const existing = await db
+  const [existing] = await db
     .select()
     .from(chapterProgressTable)
     .where(
@@ -40,20 +40,13 @@ router.post("/:chapterId", authenticate, async (req, res) => {
     )
     .limit(1);
 
-  if (existing.length > 0) {
+  if (existing) {
     await db
       .delete(chapterProgressTable)
-      .where(
-        and(
-          eq(chapterProgressTable.userId, userId),
-          eq(chapterProgressTable.chapterId, chapterId),
-        ),
-      );
+      .where(eq(chapterProgressTable.id, existing.id));
     res.json({ done: false });
   } else {
-    await db
-      .insert(chapterProgressTable)
-      .values({ userId, chapterId, courseId });
+    await db.insert(chapterProgressTable).values({ userId, chapterId, courseId });
     res.json({ done: true });
   }
 });

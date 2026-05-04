@@ -28,11 +28,7 @@ export function authenticate(
 }
 
 export function requireRole(...roles: string[]) {
-  return (
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction,
-  ): void => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({ error: "Authentification requise" });
       return;

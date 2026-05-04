@@ -22,8 +22,8 @@ export function AdminLoginScreen({ onLogin, error, loading }: Props) {
     <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-2">
-            <GraduationCap className="w-8 h-8 text-primary" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl overflow-hidden shadow-sm mb-2 border">
+            <img src="/Logo.jpeg" alt="EduConnect Haïti Logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-2xl font-bold font-serif">EduConnect Haïti</h1>
           <p className="text-muted-foreground text-sm">Espace Enseignant</p>

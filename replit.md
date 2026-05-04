@@ -1,8 +1,8 @@
-# Workspace
+# EduConnect Haïti — Workspace
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+pnpm monorepo — educational platform for Haitian students. Three artifacts: a React/Vite web app, an Expo mobile app, and an Express API server backed by PostgreSQL.
 
 ## Stack
 
@@ -10,84 +10,98 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Node.js version**: 24
 - **Package manager**: pnpm
 - **TypeScript version**: 5.9
-- **API framework**: Express 5 (with cookie-parser, helmet, CORS, rate limiting)
-- **Database**: PostgreSQL + Drizzle ORM (Replit managed)
-- **Auth**: bcrypt (password hashing) + JWT (access + refresh tokens via httpOnly cookies)
-- **Validation**: Zod v3 (api-server), Zod v4 via `zod/v4` (lib/db)
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
-- **Frontend**: React + Vite + Tailwind + shadcn/ui + wouter routing
-- **Map**: react-leaflet (OpenStreetMap tiles)
+- **API framework**: Express 5 + pino-http logging
+- **Database**: PostgreSQL + Drizzle ORM (`@workspace/db`)
+- **Auth**: JWT (access token in HttpOnly cookie, refresh token in `/api/auth` scoped cookie)
+- **Password hashing**: bcryptjs (pure JS — no native compile)
+- **Web frontend**: React + Vite (artifact: `educonnect-haiti`, port 19941)
+- **Mobile**: Expo React Native (artifact: `educonnect-mobile`)
+- **API server**: Express (artifact: `api-server`, port 8080)
 
 ## Key Commands
 
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- `pnpm --filter @workspace/api-server run dev` — run API server locally
+- `pnpm --filter @workspace/db run push` — push DB schema (interactive)
+- `pnpm --filter @workspace/db run push-force` — push DB schema (non-interactive, --force)
+- `pnpm --filter @workspace/api-server run build` — build API server (esbuild → dist/index.mjs)
+- `pnpm --filter @workspace/api-server run dev` — build + start API server
+- `pnpm --filter @workspace/educonnect-haiti run dev` — start Vite web dev server
 
-## Architecture
+## Database Schema (6 tables)
 
-### Artifacts (active services)
-- `artifacts/educonnect-haiti` — React web app (port 19941, served via `Start application` workflow)
-- `artifacts/api-server` — Express API server (port 8080)
-- `artifacts/educonnect-mobile` — Expo React Native mobile app
-- `artifacts/mockup-sandbox` — Vite component preview server (port 8081)
+All tables exist in PostgreSQL. Schema source: `lib/db/src/schema/`.
 
-### Packages
-- `lib/db` — Drizzle ORM database client + schema (users, refresh_tokens tables)
-- `lib/api-spec` — OpenAPI spec
+| Table | Purpose |
+|---|---|
+| `users` | Auth — email, password_hash, role (text: student/teacher/admin), failed_attempts |
+| `refresh_tokens` | Rotating refresh tokens (hashed SHA-256). Has legacy `revoked_at` nullable column. |
+| `chapter_progress` | Per-user chapter completion (chapter_id + course_id) |
+| `calendar_sessions` | Study calendar sessions (date, courseId, durationMinutes) |
+| `downloaded_courses` | Which courses a user has marked for offline use |
+| `chapter_videos` | Teacher-set YouTube IDs per chapter (stored globally, visible to all students) |
 
-### Web App Routing
-- `/` — Landing page (home)
-- `/cours`, `/cours/:id` — Courses
-- `/fiches`, `/fiches/:courseId` — Flashcards
-- `/calendrier` — Calendar
-- `/ecoles` — Schools map (react-leaflet, OpenStreetMap)
-- `/centres` — Community centers
-- `/opportunites` — Scholarships/opportunities
-- `/orientation` — Orientation quiz
-- `/connexion` — Login page
-- `/inscription` — Register page
-- `/admin` — Admin dashboard (requires teacher/admin role)
+**Known schema quirks:**
+- `users.role` is a legacy `user_role` ENUM type in the DB but `text` in the Drizzle schema — works fine, values come back as strings.
+- `users` has both `failed_login_attempts` (legacy) and `failed_attempts` (current); Drizzle uses `failed_attempts`.
+- `refresh_tokens` has a legacy `revoked_at` nullable column not in the Drizzle schema — harmless.
+- `downloaded_courses` previously had `downloaded_at`; renamed to `created_at` to match Drizzle schema.
 
-### API Routes
-All routes under `/api/*`, proxied from web app via Vite proxy.
-- `GET /api/healthz` — health check
-- `POST /api/auth/register` — user registration (rate limited: 5/hr)
-- `POST /api/auth/login` — login (rate limited: 10/15min, account lockout after 5 failures)
-- `POST /api/auth/logout` — logout + revoke refresh token
-- `GET /api/auth/me` — get current user (JWT required)
-- `POST /api/auth/refresh` — rotate refresh token
-- `GET /api/progress` — get all completed chapters for current user
-- `POST /api/progress/:chapterId` — toggle chapter completion (body: `{ courseId }`)
-- `GET /api/calendar` — get all calendar sessions for current user
-- `POST /api/calendar` — add a study session (body: `{ date, courseId, durationMinutes }`)
-- `DELETE /api/calendar/:sessionId` — remove a session
-- `GET /api/downloads` — get all courses marked offline by current user
-- `POST /api/downloads/:courseId` — mark course as downloaded
-- `DELETE /api/downloads/:courseId` — remove download mark
+## API Routes (`artifacts/api-server/src/routes/`)
 
-## Security Measures
-- Passwords hashed with bcrypt (12 rounds)
-- JWT access tokens (15min) + httpOnly cookie refresh tokens (7 days)
-- Refresh token rotation (old token revoked on each use)
-- Account lockout after 5 failed login attempts (15 min)
-- No user enumeration (same error for wrong email/password)
-- Rate limiting on auth routes
-- Body size limit (10kb)
-- Helmet security headers
-- CORS configured for specific origins only
-- sameSite=strict cookies
+| Route | Auth | Notes |
+|---|---|---|
+| `POST /api/auth/register` | None | fullName, email, password |
+| `POST /api/auth/login` | None | Returns JWT cookies |
+| `POST /api/auth/logout` | JWT | Clears cookies + deletes refresh token |
+| `GET /api/auth/me` | JWT | Returns safe user object |
+| `POST /api/auth/refresh` | Refresh cookie | Issues new access token |
+| `GET /api/progress` | JWT | `{ done: { [chapterId]: true } }` |
+| `POST /api/progress/:chapterId` | JWT | Body: `{ courseId }` — toggle completion |
+| `GET /api/calendar` | JWT | `{ data: { [date]: sessions[] } }` |
+| `POST /api/calendar` | JWT | Body: `{ date, courseId, durationMinutes }` |
+| `DELETE /api/calendar/:id` | JWT | Delete a session |
+| `GET /api/downloads` | JWT | `{ downloaded: { [courseId]: true } }` |
+| `POST /api/downloads/:courseId` | JWT | Toggle download flag |
+| `DELETE /api/downloads/:courseId` | JWT | Remove download flag |
+| `GET /api/videos` | **Public** | `{ videos: { [chapterId]: youtubeId } }` |
+| `PUT /api/videos/:chapterId` | `x-admin-key` header | Body: `{ youtubeUrl }` — extracts ID from any YouTube URL format |
+| `DELETE /api/videos/:chapterId` | `x-admin-key` header | Removes video from DB |
 
-## Database Schema
-- `users` — id, email (unique), password_hash, full_name, role (student/teacher/admin), is_verified, failed_login_attempts, locked_until, last_login, created_at, updated_at
-- `refresh_tokens` — id, user_id (FK), token_hash, expires_at, created_at, revoked_at
+**Admin key**: defaults to `S1G42026` (set via `ADMIN_KEY` env var). The admin page (`/admin`) sends this key automatically.
 
-## Environment Variables
-- `DATABASE_URL`, `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` — PostgreSQL (Replit managed)
-- `JWT_SECRET` — Access token signing secret (auto-generated)
-- `JWT_REFRESH_SECRET` — Refresh token signing secret (auto-generated)
-- `JWT_EXPIRES_IN` — Access token TTL (default: 15m)
-- `JWT_REFRESH_EXPIRES_IN` — Refresh token TTL (default: 7d)
+## Frontend Structure (`artifacts/educonnect-haiti/src/`)
+
+- `lib/api.ts` — API client: `authApi`, `progressApi`, `calendarApi`, `downloadsApi`, `videosApi`
+- `hooks/use-auth.tsx` — `AuthProvider` + `useAuth()` (wraps entire app in `App.tsx`)
+- `hooks/use-progress.tsx` — API-backed chapter completion (`isDone`, `toggle`, `courseStats`)
+- `hooks/use-calendar.tsx` — API-backed calendar sessions
+- `hooks/use-downloads.tsx` — API-backed offline download flags
+- `hooks/use-admin-auth.ts` — Separate admin password auth (SHA-256 of "S1G42026")
+- `pages/login.tsx` — Login form
+- `pages/register.tsx` — Registration form
+- `pages/progress-dashboard.tsx` — `/progression` route — shows all course progress
+- `pages/admin.tsx` — Teacher space: YouTube IDs (→ DB via `videosApi`) + offline MP4 management (→ IndexedDB)
+- `pages/course-detail.tsx` — Loads YouTube IDs from DB via `videosApi.getAll()` on mount
+
+## Auth Flow
+
+1. Student registers → account created with `role: 'student'`
+2. Login → access token (15min HttpOnly cookie) + refresh token (7d scoped cookie)
+3. `useAuth` hook calls `/api/auth/me` on mount; if 401, user is null
+4. `ProtectedRoute` in App.tsx redirects unauthenticated users to `/connexion`
+5. `PublicOnlyRoute` redirects logged-in users to `/cours`
+
+## Video Architecture
+
+- **YouTube IDs** → stored in `chapter_videos` PostgreSQL table → visible to ALL students on ALL devices
+- **MP4 blobs** → IndexedDB (per-browser, hors-ligne only) — teacher uploads via admin page
+- Admin page reads both sources and shows combined status per chapter
+- `course-detail.tsx` checks DB YouTube IDs first, falls back to hardcoded `youtubeId` in course data
+
+## Vite Proxy
+
+`/api` → `http://localhost:8080` (configured in `vite.config.ts`)
+
+## Known Issues / Notes
+
+- GitHub push timeouts in Replit = network timeout, not a code problem. Push smaller commits or use the Git panel.
+- The `Start application` workflow is legacy (from before multi-artifact setup). Use individual artifact workflows.

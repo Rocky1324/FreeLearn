@@ -1,40 +1,43 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { downloadsApi } from "@/lib/api";
+import { useAuth } from "./use-auth";
 
 export function useDownloads() {
+  const { user } = useAuth();
   const [downloaded, setDownloaded] = useState<Record<string, boolean>>({});
-  const [isLoading, setIsLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
-    downloadsApi
-      .getAll()
-      .then(({ downloaded: d }) => setDownloaded(d))
-      .catch(() => setDownloaded({}))
-      .finally(() => setIsLoading(false));
-  }, []);
-
-  const isDownloaded = useCallback(
-    (courseId: string) => !!downloaded[courseId],
-    [downloaded],
-  );
-
-  const markDownloaded = useCallback(async (courseId: string) => {
-    setDownloaded((d) => ({ ...d, [courseId]: true }));
+  const load = useCallback(async () => {
+    if (!user) { setDownloaded({}); setLoaded(true); return; }
     try {
-      await downloadsApi.add(courseId);
+      const { downloaded } = await downloadsApi.getAll();
+      setDownloaded(downloaded);
     } catch {
-      setDownloaded((d) => ({ ...d, [courseId]: false }));
+      setDownloaded({});
+    } finally {
+      setLoaded(true);
     }
-  }, []);
+  }, [user]);
 
-  const removeDownload = useCallback(async (courseId: string) => {
-    setDownloaded((d) => ({ ...d, [courseId]: false }));
+  useEffect(() => { load(); }, [load]);
+
+  const isDownloaded = (courseId: string) => !!downloaded[courseId];
+
+  const toggle = async (courseId: string) => {
+    const current = !!downloaded[courseId];
+    setDownloaded((d) => ({ ...d, [courseId]: !current }));
     try {
-      await downloadsApi.remove(courseId);
+      if (current) {
+        await downloadsApi.remove(courseId);
+        setDownloaded((d) => ({ ...d, [courseId]: false }));
+      } else {
+        await downloadsApi.add(courseId);
+        setDownloaded((d) => ({ ...d, [courseId]: true }));
+      }
     } catch {
-      setDownloaded((d) => ({ ...d, [courseId]: true }));
+      setDownloaded((d) => ({ ...d, [courseId]: current }));
     }
-  }, []);
+  };
 
-  return { isDownloaded, markDownloaded, removeDownload, isLoading };
+  return { isDownloaded, toggle, downloaded, loaded };
 }

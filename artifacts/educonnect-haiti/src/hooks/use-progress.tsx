@@ -1,45 +1,47 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { progressApi } from "@/lib/api";
+import { useAuth } from "./use-auth";
 
 export function useProgress() {
+  const { user } = useAuth();
   const [done, setDone] = useState<Record<string, boolean>>({});
-  const [isLoading, setIsLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
-    progressApi
-      .getAll()
-      .then(({ done: d }) => setDone(d))
-      .catch(() => setDone({}))
-      .finally(() => setIsLoading(false));
-  }, []);
+  const load = useCallback(async () => {
+    if (!user) { setDone({}); setLoaded(true); return; }
+    try {
+      const { done } = await progressApi.getAll();
+      setDone(done);
+    } catch {
+      setDone({});
+    } finally {
+      setLoaded(true);
+    }
+  }, [user]);
 
-  const isDone = useCallback(
-    (chapterId: string) => !!done[chapterId],
-    [done],
-  );
+  useEffect(() => { load(); }, [load]);
 
-  const toggle = useCallback(async (chapterId: string, courseId: string) => {
-    const prev = !!done[chapterId];
-    setDone((d) => ({ ...d, [chapterId]: !prev }));
+  const isDone = (chapterId: string) => !!done[chapterId];
+
+  const toggle = async (chapterId: string, courseId: string) => {
+    const current = !!done[chapterId];
+    setDone((d) => ({ ...d, [chapterId]: !current }));
     try {
       const { done: newDone } = await progressApi.toggle(chapterId, courseId);
       setDone((d) => ({ ...d, [chapterId]: newDone }));
     } catch {
-      setDone((d) => ({ ...d, [chapterId]: prev }));
+      setDone((d) => ({ ...d, [chapterId]: current }));
     }
-  }, [done]);
+  };
 
-  const courseStats = useCallback(
-    (chapters: { id: string }[]) => {
-      const n = chapters.filter((c) => done[c.id]).length;
-      return {
-        done: n,
-        total: chapters.length,
-        pct: chapters.length ? Math.round((n / chapters.length) * 100) : 0,
-      };
-    },
-    [done],
-  );
+  const courseStats = (chapters: { id: string }[]) => {
+    const n = chapters.filter((c) => done[c.id]).length;
+    return {
+      done: n,
+      total: chapters.length,
+      pct: chapters.length ? Math.round((n / chapters.length) * 100) : 0,
+    };
+  };
 
-  return { isDone, toggle, courseStats, isLoading };
+  return { isDone, toggle, courseStats, done, loaded };
 }
