@@ -69,3 +69,50 @@ export const authApi = {
   refresh: () =>
     request<{ user: SafeUser }>("/auth/refresh", { method: "POST" }),
 };
+
+export const progressApi = {
+  getAll: () => request<{ done: Record<string, boolean> }>("/progress"),
+
+  toggle: (chapterId: string, courseId: string) =>
+    request<{ done: boolean }>(`/progress/${encodeURIComponent(chapterId)}`, {
+      method: "POST",
+      body: JSON.stringify({ courseId }),
+    }),
+};
+
+export type CalendarSession = {
+  id: number;
+  courseId: string;
+  durationMinutes: number;
+};
+
+export const calendarApi = {
+  getAll: () =>
+    request<{ data: Record<string, CalendarSession[]> }>("/calendar"),
+
+  add: (date: string, courseId: string, durationMinutes: number) =>
+    request<{ session: CalendarSession & { date: string } }>("/calendar", {
+      method: "POST",
+      body: JSON.stringify({ date, courseId, durationMinutes }),
+    }),
+
+  remove: (sessionId: number) =>
+    request<{ message: string }>(`/calendar/${sessionId}`, {
+      method: "DELETE",
+    }),
+};
+
+export const downloadsApi = {
+  getAll: () =>
+    request<{ downloaded: Record<string, boolean> }>("/downloads"),
+
+  add: (courseId: string) =>
+    request<{ downloaded: boolean }>(`/downloads/${encodeURIComponent(courseId)}`, {
+      method: "POST",
+    }),
+
+  remove: (courseId: string) =>
+    request<{ downloaded: boolean }>(`/downloads/${encodeURIComponent(courseId)}`, {
+      method: "DELETE",
+    }),
+};

@@ -60,6 +60,14 @@ All routes under `/api/*`, proxied from web app via Vite proxy.
 - `POST /api/auth/logout` — logout + revoke refresh token
 - `GET /api/auth/me` — get current user (JWT required)
 - `POST /api/auth/refresh` — rotate refresh token
+- `GET /api/progress` — get all completed chapters for current user
+- `POST /api/progress/:chapterId` — toggle chapter completion (body: `{ courseId }`)
+- `GET /api/calendar` — get all calendar sessions for current user
+- `POST /api/calendar` — add a study session (body: `{ date, courseId, durationMinutes }`)
+- `DELETE /api/calendar/:sessionId` — remove a session
+- `GET /api/downloads` — get all courses marked offline by current user
+- `POST /api/downloads/:courseId` — mark course as downloaded
+- `DELETE /api/downloads/:courseId` — remove download mark
 
 ## Security Measures
 - Passwords hashed with bcrypt (12 rounds)

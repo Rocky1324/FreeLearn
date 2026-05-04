@@ -3,8 +3,8 @@ import { useRoute, Link, useLocation } from "wouter";
 import { ArrowLeft, ArrowRight, DownloadCloud, CheckCircle2, PlayCircle, BookText, PenTool, Check, X, Lightbulb, Layers } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useProgress } from "@/hooks/use-progress";
+import { useDownloads } from "@/hooks/use-downloads";
 import { courses } from "@/data/courses";
 import { getLessonVideo, getYoutubeId } from "@/lib/lesson-storage";
 import { toast } from "sonner";
@@ -17,15 +17,15 @@ export default function CourseDetail() {
   const courseIndex = courses.findIndex(c => c.id === courseId);
   const nextCourse = courseIndex >= 0 ? courses[courseIndex + 1] : undefined;
 
-  const [downloadedCourses, setDownloadedCourses] = useLocalStorage<Record<string, boolean>>("downloaded-courses", {});
   const { isDone, toggle: toggleDone, courseStats } = useProgress();
+  const { isDownloaded, markDownloaded, removeDownload } = useDownloads();
   const [activeChapterId, setActiveChapterId] = useState(course?.chapters[0]?.id);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState<Record<string, boolean>>({});
   const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string | null>(null);
   const [customYoutubeId, setCustomYoutubeId] = useState<string | null>(null);
 
-  const isDownloaded = downloadedCourses[courseId || ""] || false;
+  const isDownloadedNow = isDownloaded(courseId || "");
   const activeChapterIdSafe = activeChapterId || course?.chapters[0]?.id;
 
   useEffect(() => {
@@ -69,10 +69,8 @@ export default function CourseDetail() {
       .filter((u): u is string => !!u)
       .map((u) => `${base}${u}`);
 
-    if (isDownloaded) {
-      const newDownloads = { ...downloadedCourses };
-      delete newDownloads[courseId];
-      setDownloadedCourses(newDownloads);
+    if (isDownloadedNow) {
+      await removeDownload(courseId);
       if (mediaUrls.length && navigator.serviceWorker?.controller) {
         navigator.serviceWorker.controller.postMessage({ type: "REMOVE_MEDIA", urls: mediaUrls });
       }
@@ -90,7 +88,7 @@ export default function CourseDetail() {
         console.warn("SW caching failed", err);
       }
     }
-    setDownloadedCourses({ ...downloadedCourses, [courseId]: true });
+    await markDownloaded(courseId);
     toast.success(
       mediaUrls.length
         ? "Cours et vidéo téléchargés pour la lecture hors-ligne"
@@ -164,10 +162,10 @@ export default function CourseDetail() {
             <div className="flex flex-col gap-2">
               <Button 
                 onClick={handleDownload}
-                variant={isDownloaded ? "outline" : "secondary"} 
-                className={isDownloaded ? "bg-green-500/20 text-white border-green-400 hover:bg-green-500/30" : "font-bold"}
+                variant={isDownloadedNow ? "outline" : "secondary"} 
+                className={isDownloadedNow ? "bg-green-500/20 text-white border-green-400 hover:bg-green-500/30" : "font-bold"}
               >
-                {isDownloaded ? (
+                {isDownloadedNow ? (
                   <><CheckCircle2 className="mr-2 h-4 w-4" /> Disponible hors-ligne</>
                 ) : (
                   <><DownloadCloud className="mr-2 h-4 w-4" /> Télécharger (Hors-ligne)</>
@@ -252,7 +250,7 @@ export default function CourseDetail() {
               {/* Video player */}
               {(() => {
                 const localMp4 = (activeChapter as { mp4Url?: string }).mp4Url;
-                const bundledOffline = isDownloaded && !!localMp4;
+                const bundledOffline = isDownloadedNow && !!localMp4;
                 const useUploaded = !!uploadedVideoUrl;
                 const useLocal = useUploaded || bundledOffline;
                 const videoSrc = useUploaded
@@ -308,7 +306,7 @@ export default function CourseDetail() {
                         Lecture hors-ligne
                       </span>
                     )}
-                    {isDownloaded && !localMp4 && (
+                    {isDownloadedNow && !localMp4 && (
                       <span className="absolute top-4 right-4 text-xs font-bold bg-amber-500/20 text-amber-300 px-2 py-1 rounded border border-amber-500/30 backdrop-blur-sm z-10">
                         Vidéo en ligne uniquement
                       </span>
@@ -445,8 +443,9 @@ export default function CourseDetail() {
               <div className="pt-6 border-t mt-4">
                 <button
                   onClick={() => {
-                    toggleDone(activeChapter.id);
-                    if (!isDone(activeChapter.id)) toast.success("Chapitre marqué comme terminé !");
+                    const wasDone = isDone(activeChapter.id);
+                    toggleDone(activeChapter.id, courseId!);
+                    if (!wasDone) toast.success("Chapitre marqué comme terminé !");
                   }}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
                     isDone(activeChapter.id)

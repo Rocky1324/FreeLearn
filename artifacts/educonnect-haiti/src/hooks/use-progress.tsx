@@ -1,21 +1,45 @@
-import { useLocalStorage } from "./use-local-storage";
+import { useState, useEffect, useCallback } from "react";
+import { progressApi } from "@/lib/api";
 
 export function useProgress() {
-  const [done, setDone] = useLocalStorage<Record<string, boolean>>("ch-progress", {});
+  const [done, setDone] = useState<Record<string, boolean>>({});
+  const [isLoading, setIsLoading] = useState(true);
 
-  const isDone = (chapterId: string) => !!done[chapterId];
+  useEffect(() => {
+    progressApi
+      .getAll()
+      .then(({ done: d }) => setDone(d))
+      .catch(() => setDone({}))
+      .finally(() => setIsLoading(false));
+  }, []);
 
-  const toggle = (chapterId: string) =>
-    setDone((d) => ({ ...d, [chapterId]: !d[chapterId] }));
+  const isDone = useCallback(
+    (chapterId: string) => !!done[chapterId],
+    [done],
+  );
 
-  const courseStats = (chapters: { id: string }[]) => {
-    const n = chapters.filter((c) => done[c.id]).length;
-    return {
-      done: n,
-      total: chapters.length,
-      pct: chapters.length ? Math.round((n / chapters.length) * 100) : 0,
-    };
-  };
+  const toggle = useCallback(async (chapterId: string, courseId: string) => {
+    const prev = !!done[chapterId];
+    setDone((d) => ({ ...d, [chapterId]: !prev }));
+    try {
+      const { done: newDone } = await progressApi.toggle(chapterId, courseId);
+      setDone((d) => ({ ...d, [chapterId]: newDone }));
+    } catch {
+      setDone((d) => ({ ...d, [chapterId]: prev }));
+    }
+  }, [done]);
 
-  return { isDone, toggle, courseStats };
+  const courseStats = useCallback(
+    (chapters: { id: string }[]) => {
+      const n = chapters.filter((c) => done[c.id]).length;
+      return {
+        done: n,
+        total: chapters.length,
+        pct: chapters.length ? Math.round((n / chapters.length) * 100) : 0,
+      };
+    },
+    [done],
+  );
+
+  return { isDone, toggle, courseStats, isLoading };
 }
