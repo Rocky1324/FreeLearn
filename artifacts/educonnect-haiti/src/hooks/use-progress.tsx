@@ -1,38 +1,12 @@
-import { useEffect, useState, useCallback } from "react";
-import { progressApi } from "@/lib/api";
-import { useAuth } from "./use-auth";
+import { useLocalStorage } from "./use-local-storage";
 
 export function useProgress() {
-  const { user } = useAuth();
-  const [done, setDone] = useState<Record<string, boolean>>({});
-  const [loaded, setLoaded] = useState(false);
-
-  const load = useCallback(async () => {
-    if (!user) { setDone({}); setLoaded(true); return; }
-    try {
-      const { done } = await progressApi.getAll();
-      setDone(done);
-    } catch {
-      setDone({});
-    } finally {
-      setLoaded(true);
-    }
-  }, [user]);
-
-  useEffect(() => { load(); }, [load]);
+  const [done, setDone] = useLocalStorage<Record<string, boolean>>("ch-progress", {});
 
   const isDone = (chapterId: string) => !!done[chapterId];
 
-  const toggle = async (chapterId: string, courseId: string) => {
-    const current = !!done[chapterId];
-    setDone((d) => ({ ...d, [chapterId]: !current }));
-    try {
-      const { done: newDone } = await progressApi.toggle(chapterId, courseId);
-      setDone((d) => ({ ...d, [chapterId]: newDone }));
-    } catch {
-      setDone((d) => ({ ...d, [chapterId]: current }));
-    }
-  };
+  const toggle = (chapterId: string) =>
+    setDone((d) => ({ ...d, [chapterId]: !d[chapterId] }));
 
   const courseStats = (chapters: { id: string }[]) => {
     const n = chapters.filter((c) => done[c.id]).length;
@@ -43,5 +17,5 @@ export function useProgress() {
     };
   };
 
-  return { isDone, toggle, courseStats, done, loaded };
+  return { isDone, toggle, courseStats };
 }

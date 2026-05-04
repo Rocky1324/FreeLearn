@@ -3,11 +3,10 @@ import { useRoute, Link, useLocation } from "wouter";
 import { ArrowLeft, ArrowRight, DownloadCloud, CheckCircle2, PlayCircle, BookText, PenTool, Check, X, Lightbulb, Layers } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useProgress } from "@/hooks/use-progress";
-import { useDownloads } from "@/hooks/use-downloads";
 import { courses } from "@/data/courses";
-import { getLessonVideo } from "@/lib/lesson-storage";
-import { videosApi } from "@/lib/api";
+import { getLessonVideo, getYoutubeId } from "@/lib/lesson-storage";
 import { toast } from "sonner";
 
 export default function CourseDetail() {
@@ -18,31 +17,31 @@ export default function CourseDetail() {
   const courseIndex = courses.findIndex(c => c.id === courseId);
   const nextCourse = courseIndex >= 0 ? courses[courseIndex + 1] : undefined;
 
+  const [downloadedCourses, setDownloadedCourses] = useLocalStorage<Record<string, boolean>>("downloaded-courses", {});
   const { isDone, toggle: toggleDone, courseStats } = useProgress();
-  const { isDownloaded, toggle: toggleDownload } = useDownloads();
   const [activeChapterId, setActiveChapterId] = useState(course?.chapters[0]?.id);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState<Record<string, boolean>>({});
   const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string | null>(null);
-  const [dbYoutubeIds, setDbYoutubeIds] = useState<Record<string, string>>({});
+  const [customYoutubeId, setCustomYoutubeId] = useState<string | null>(null);
 
+  const isDownloaded = downloadedCourses[courseId || ""] || false;
   const activeChapterIdSafe = activeChapterId || course?.chapters[0]?.id;
-  const downloaded = courseId ? isDownloaded(courseId) : false;
-
-  useEffect(() => {
-    videosApi.getAll().then(({ videos }) => setDbYoutubeIds(videos)).catch(() => {});
-  }, []);
 
   useEffect(() => {
     if (!activeChapterIdSafe) return;
     let revoke: string | null = null;
     setUploadedVideoUrl(null);
+    setCustomYoutubeId(null);
     getLessonVideo(activeChapterIdSafe).then((blob) => {
       if (blob) {
         const url = URL.createObjectURL(blob);
         revoke = url;
         setUploadedVideoUrl(url);
       }
+    }).catch(() => {});
+    getYoutubeId(activeChapterIdSafe).then((id) => {
+      if (id) setCustomYoutubeId(id);
     }).catch(() => {});
     return () => { if (revoke) URL.revokeObjectURL(revoke); };
   }, [activeChapterIdSafe]);
@@ -52,7 +51,9 @@ export default function CourseDetail() {
       <Layout>
         <div className="container py-20 text-center">
           <h1 className="text-2xl font-bold mb-4">Cours introuvable</h1>
-          <Link href="/cours"><Button>Retour au catalogue</Button></Link>
+          <Link href="/cours">
+            <Button>Retour au catalogue</Button>
+          </Link>
         </div>
       </Layout>
     );
@@ -61,9 +62,40 @@ export default function CourseDetail() {
   const activeChapter = course.chapters.find(c => c.id === activeChapterId) || course.chapters[0];
 
   const handleDownload = async () => {
-    if (!courseId) return;
-    await toggleDownload(courseId);
-    toast.success(downloaded ? "Cours retiré du mode hors-ligne" : "Cours enregistré pour lecture hors-ligne");
+    if (!courseId || !course) return;
+    const base = import.meta.env.BASE_URL;
+    const mediaUrls = course.chapters
+      .map((c) => (c as { mp4Url?: string }).mp4Url)
+      .filter((u): u is string => !!u)
+      .map((u) => `${base}${u}`);
+
+    if (isDownloaded) {
+      const newDownloads = { ...downloadedCourses };
+      delete newDownloads[courseId];
+      setDownloadedCourses(newDownloads);
+      if (mediaUrls.length && navigator.serviceWorker?.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: "REMOVE_MEDIA", urls: mediaUrls });
+      }
+      toast.success("Cours retiré du mode hors-ligne");
+      return;
+    }
+
+    if (mediaUrls.length) {
+      try {
+        const reg = await navigator.serviceWorker?.ready;
+        if (reg?.active) {
+          reg.active.postMessage({ type: "CACHE_MEDIA", urls: mediaUrls });
+        }
+      } catch (err) {
+        console.warn("SW caching failed", err);
+      }
+    }
+    setDownloadedCourses({ ...downloadedCourses, [courseId]: true });
+    toast.success(
+      mediaUrls.length
+        ? "Cours et vidéo téléchargés pour la lecture hors-ligne"
+        : "Cours téléchargé pour une lecture hors-ligne",
+    );
   };
 
   const goToNextChapter = () => {
@@ -95,6 +127,7 @@ export default function CourseDetail() {
 
   return (
     <Layout>
+      {/* Course Header */}
       <div className="bg-primary text-primary-foreground py-10">
         <div className="container mx-auto px-4">
           <Link href="/cours" className="inline-flex items-center text-primary-foreground/80 hover:text-white text-sm mb-6 transition-colors">
@@ -103,11 +136,16 @@ export default function CourseDetail() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div className="max-w-2xl space-y-4">
               <div className="flex gap-3 flex-wrap">
-                <span className="inline-flex items-center rounded-md bg-white/20 px-2 py-1 text-xs font-medium text-white ring-1 ring-inset ring-white/20">{course.subject}</span>
-                <span className="inline-flex items-center rounded-md bg-white/20 px-2 py-1 text-xs font-medium text-white ring-1 ring-inset ring-white/20">{course.level}</span>
+                <span className="inline-flex items-center rounded-md bg-white/20 px-2 py-1 text-xs font-medium text-white ring-1 ring-inset ring-white/20">
+                  {course.subject}
+                </span>
+                <span className="inline-flex items-center rounded-md bg-white/20 px-2 py-1 text-xs font-medium text-white ring-1 ring-inset ring-white/20">
+                  {course.level}
+                </span>
               </div>
               <h1 className="text-3xl md:text-5xl font-bold font-serif leading-tight">{course.title}</h1>
               <p className="text-primary-foreground/80 text-lg">{course.description}</p>
+              {/* Progress bar */}
               {(() => {
                 const stats = courseStats(course.chapters);
                 return (
@@ -124,12 +162,12 @@ export default function CourseDetail() {
               })()}
             </div>
             <div className="flex flex-col gap-2">
-              <Button
+              <Button 
                 onClick={handleDownload}
-                variant={downloaded ? "outline" : "secondary"}
-                className={downloaded ? "bg-green-500/20 text-white border-green-400 hover:bg-green-500/30" : "font-bold"}
+                variant={isDownloaded ? "outline" : "secondary"} 
+                className={isDownloaded ? "bg-green-500/20 text-white border-green-400 hover:bg-green-500/30" : "font-bold"}
               >
-                {downloaded ? (
+                {isDownloaded ? (
                   <><CheckCircle2 className="mr-2 h-4 w-4" /> Disponible hors-ligne</>
                 ) : (
                   <><DownloadCloud className="mr-2 h-4 w-4" /> Télécharger (Hors-ligne)</>
@@ -145,12 +183,16 @@ export default function CourseDetail() {
         </div>
       </div>
 
+      {/* Mobile chapter tabs (horizontal scroll) */}
       <div className="lg:hidden border-b bg-card overflow-x-auto flex-none">
         <div className="flex min-w-max px-4 py-3 gap-2">
           {course.chapters.map((chapter, idx) => (
             <button
               key={chapter.id}
-              onClick={() => { setActiveChapterId(chapter.id); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              onClick={() => {
+                setActiveChapterId(chapter.id);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium whitespace-nowrap transition-all ${
                 activeChapterId === chapter.id
                   ? "bg-primary/5 border-primary text-primary"
@@ -168,6 +210,7 @@ export default function CourseDetail() {
 
       <div className="container mx-auto px-4 py-8 lg:py-12">
         <div className="flex flex-col lg:flex-row gap-8">
+          {/* Chapter Navigation — desktop sidebar only */}
           <div className="hidden lg:block w-1/3 xl:w-1/4 space-y-4">
             <h3 className="font-bold text-lg mb-4">Contenu du cours</h3>
             <div className="flex flex-col space-y-2">
@@ -178,8 +221,8 @@ export default function CourseDetail() {
                     key={chapter.id}
                     onClick={() => setActiveChapterId(chapter.id)}
                     className={`text-left p-4 rounded-xl border transition-all ${
-                      activeChapterId === chapter.id
-                        ? "bg-primary/5 border-primary shadow-sm ring-1 ring-primary/20"
+                      activeChapterId === chapter.id 
+                        ? "bg-primary/5 border-primary shadow-sm ring-1 ring-primary/20" 
                         : "bg-card hover:bg-muted"
                     }`}
                   >
@@ -203,11 +246,13 @@ export default function CourseDetail() {
             </div>
           </div>
 
+          {/* Chapter Content */}
           <div className="w-full lg:w-2/3 xl:w-3/4 space-y-8">
             <div className="bg-card border rounded-2xl overflow-hidden shadow-sm">
+              {/* Video player */}
               {(() => {
                 const localMp4 = (activeChapter as { mp4Url?: string }).mp4Url;
-                const bundledOffline = downloaded && !!localMp4;
+                const bundledOffline = isDownloaded && !!localMp4;
                 const useUploaded = !!uploadedVideoUrl;
                 const useLocal = useUploaded || bundledOffline;
                 const videoSrc = useUploaded
@@ -215,7 +260,6 @@ export default function CourseDetail() {
                   : bundledOffline
                   ? `${import.meta.env.BASE_URL}${localMp4}`
                   : "";
-                const effectiveYoutubeId = dbYoutubeIds[activeChapter.id] || activeChapter.youtubeId;
                 return (
                   <div className="aspect-video bg-slate-900 relative">
                     {useLocal ? (
@@ -226,11 +270,11 @@ export default function CourseDetail() {
                         controls
                         playsInline
                       />
-                    ) : effectiveYoutubeId ? (
+                    ) : (customYoutubeId || activeChapter.youtubeId) ? (
                       <iframe
-                        key={`${activeChapter.id}-${effectiveYoutubeId}`}
+                        key={`${activeChapter.id}-${customYoutubeId || activeChapter.youtubeId}`}
                         className="w-full h-full"
-                        src={`https://www.youtube.com/embed/${effectiveYoutubeId}?rel=0&modestbranding=1`}
+                        src={`https://www.youtube.com/embed/${customYoutubeId || activeChapter.youtubeId}?rel=0&modestbranding=1`}
                         title={`Vidéo de la leçon : ${activeChapter.title}`}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
@@ -264,11 +308,15 @@ export default function CourseDetail() {
                         Lecture hors-ligne
                       </span>
                     )}
+                    {isDownloaded && !localMp4 && (
+                      <span className="absolute top-4 right-4 text-xs font-bold bg-amber-500/20 text-amber-300 px-2 py-1 rounded border border-amber-500/30 backdrop-blur-sm z-10">
+                        Vidéo en ligne uniquement
+                      </span>
+                    )}
                   </div>
                 );
               })()}
-
-              {activeChapter.youtubeSearch && (dbYoutubeIds[activeChapter.id] || activeChapter.youtubeId) && (
+              {activeChapter.youtubeSearch && (customYoutubeId || activeChapter.youtubeId) && (
                 <div className="px-6 md:px-8 pt-4 -mb-2">
                   <a
                     href={`https://www.youtube.com/results?search_query=${encodeURIComponent(activeChapter.youtubeSearch)}`}
@@ -280,7 +328,8 @@ export default function CourseDetail() {
                   </a>
                 </div>
               )}
-
+              
+              {/* Written Summary */}
               <div className="p-6 md:p-8 space-y-6">
                 <div className="flex items-center gap-2 font-bold text-lg text-primary border-b pb-4">
                   <BookText className="w-5 h-5" />
@@ -292,6 +341,7 @@ export default function CourseDetail() {
               </div>
             </div>
 
+            {/* Examples */}
             {activeChapter.examples && activeChapter.examples.length > 0 && (
               <div className="bg-card border rounded-2xl p-6 md:p-8 shadow-sm space-y-6">
                 <div className="flex items-center gap-2 font-bold text-lg text-primary border-b pb-4">
@@ -302,13 +352,16 @@ export default function CourseDetail() {
                   {activeChapter.examples.map((ex, idx) => (
                     <div key={idx} className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                       <p className="font-bold text-amber-900 mb-2">{ex.title}</p>
-                      <p className="text-amber-900/90 whitespace-pre-line leading-relaxed text-sm">{ex.content}</p>
+                      <p className="text-amber-900/90 whitespace-pre-line leading-relaxed text-sm">
+                        {ex.content}
+                      </p>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
+            {/* Exercises */}
             <div className="bg-card border rounded-2xl p-6 md:p-8 shadow-sm space-y-8">
               <div className="flex items-center gap-2 font-bold text-lg text-primary border-b pb-4">
                 <PenTool className="w-5 h-5" />
@@ -329,6 +382,7 @@ export default function CourseDetail() {
                         {ex.options.map((opt, oIdx) => {
                           let btnClass = "justify-start h-auto py-3 px-4 text-left font-normal border-2 bg-transparent";
                           let icon = null;
+
                           if (isSubmitted) {
                             if (oIdx === ex.answer) {
                               btnClass = "justify-start h-auto py-3 px-4 text-left font-bold border-green-500 bg-green-50 text-green-900";
@@ -346,10 +400,11 @@ export default function CourseDetail() {
                               btnClass = "justify-start h-auto py-3 px-4 text-left font-normal hover:bg-muted";
                             }
                           }
+
                           return (
-                            <Button
-                              key={oIdx}
-                              variant="outline"
+                            <Button 
+                              key={oIdx} 
+                              variant="outline" 
                               className={btnClass}
                               onClick={() => handleAnswer(eIdx, oIdx)}
                               disabled={isSubmitted}
@@ -367,7 +422,9 @@ export default function CourseDetail() {
                       </div>
                       {isSubmitted && ex.explanation && (
                         <div className={`rounded-lg p-4 text-sm border ${isCorrect ? "bg-green-50 border-green-200 text-green-900" : "bg-red-50 border-red-200 text-red-900"}`}>
-                          <p className="font-bold mb-1">{isCorrect ? "Bonne réponse !" : "Explication :"}</p>
+                          <p className="font-bold mb-1">
+                            {isCorrect ? "Bonne réponse !" : "Explication :"}
+                          </p>
                           <p className="leading-relaxed">{ex.explanation}</p>
                         </div>
                       )}
@@ -384,10 +441,11 @@ export default function CourseDetail() {
                 </div>
               )}
 
+              {/* Chapter completion toggle */}
               <div className="pt-6 border-t mt-4">
                 <button
                   onClick={() => {
-                    if (courseId) toggleDone(activeChapter.id, courseId);
+                    toggleDone(activeChapter.id);
                     if (!isDone(activeChapter.id)) toast.success("Chapitre marqué comme terminé !");
                   }}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
