@@ -27,7 +27,7 @@ This is a modern web application built with:
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/Rocky1324/Edu_Connect
-   cd EduConnect
+   cd Edu_Connect
    ```
 
 2. **Install dependencies:**
