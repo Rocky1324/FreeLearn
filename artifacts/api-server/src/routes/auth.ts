@@ -8,7 +8,7 @@ import { usersTable, sessionsTable } from "@workspace/db/schema";
 
 const router = Router();
 
-const TEACHER_CODE = "TEACHER2026";
+const TEACHER_CODE = process.env.TEACHER_REGISTRATION_CODE || "TEACHER2026";
 const BCRYPT_ROUNDS = 12;
 const SESSION_MS = 30 * 24 * 60 * 60 * 1000;
 
