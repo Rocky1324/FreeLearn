@@ -7,12 +7,14 @@ export class ApiError extends Error {
   }
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+
 async function request<T = unknown>(
   method: string,
   path: string,
   body?: unknown,
 ): Promise<T> {
-  const res = await fetch(path, {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
     method,
     headers: body !== undefined ? { "Content-Type": "application/json" } : {},
     body: body !== undefined ? JSON.stringify(body) : undefined,
