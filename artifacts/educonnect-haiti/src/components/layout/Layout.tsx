@@ -31,10 +31,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="container flex h-16 items-center justify-between mx-auto px-4">
           <Link href="/" className="flex items-center space-x-2">
             <div className="overflow-hidden rounded-lg">
-              <img src="/Logo.jpeg" alt="EduConnect Haïti Logo" className="h-9 w-9 object-cover" />
+              <img src="/Logo.jpeg" alt="FreeLearn Logo" className="h-9 w-9 object-cover" />
             </div>
-            <span className="font-serif font-bold text-xl text-primary hidden sm:inline-block">EduConnect Haïti</span>
-            <span className="font-serif font-bold text-xl text-primary sm:hidden">EduConnect</span>
+            <span className="font-serif font-bold text-xl text-primary hidden sm:inline-block">FreeLearn</span>
+            <span className="font-serif font-bold text-xl text-primary sm:hidden">FreeLearn</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -105,8 +105,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2 space-y-4">
             <div className="flex items-center space-x-2">
-              <img src="/Logo.jpeg" alt="EduConnect Haïti Logo" className="h-8 w-8 object-cover rounded" />
-              <span className="font-serif font-bold text-xl">EduConnect Haïti</span>
+              <img src="/Logo.jpeg" alt="FreeLearn Logo" className="h-8 w-8 object-cover rounded" />
+              <span className="font-serif font-bold text-xl">FreeLearn</span>
             </div>
             <p className="text-primary-foreground/80 max-w-sm">
               Donner à chaque jeune haïtien les mêmes chances de réussir grâce à une éducation accessible, moderne et ancrée dans notre réalité.
@@ -144,7 +144,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <div className="container mx-auto px-4 mt-8 pt-8 border-t border-primary-foreground/20 text-center text-sm text-primary-foreground/60">
-          © {new Date().getFullYear()} EduConnect Haïti. Fièrement construit pour la jeunesse.
+          © {new Date().getFullYear()} FreeLearn. Fièrement construit pour la jeunesse.
         </div>
       </footer>
     </div>

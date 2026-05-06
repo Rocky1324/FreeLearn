@@ -11,7 +11,7 @@ export default function Centers() {
         <div className="container mx-auto px-4 py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
             <h1 className="text-4xl md:text-5xl font-bold font-serif leading-tight">
-              Centres Relais EduConnect
+              Centres Relais FreeLearn
             </h1>
             <p className="text-xl text-muted-foreground">
               Pas d'internet à la maison ? Aucun problème. Nos centres communautaires partenaires vous offrent l'accès gratuit aux équipements nécessaires pour apprendre.

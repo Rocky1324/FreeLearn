@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const SESSION_KEY = "educonnect_admin_session";
+const SESSION_KEY = "freelearn_admin_session";
 // SHA-256 hash of "S1G42026"
 const CORRECT_HASH = "c618b41d4f77ca24f95a5325b3c0db8a5f1159e43aaad1f7cb9525ee5656c751";
 

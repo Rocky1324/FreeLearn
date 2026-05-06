@@ -1,5 +1,5 @@
-const APP_CACHE = "educonnect-app-v1";
-const MEDIA_CACHE = "educonnect-media-v1";
+const APP_CACHE = "freelearn-app-v1";
+const MEDIA_CACHE = "freelearn-media-v1";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();

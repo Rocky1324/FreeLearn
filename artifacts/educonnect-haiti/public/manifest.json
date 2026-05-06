@@ -1,6 +1,6 @@
 {
-  "name": "EduConnect Haïti",
-  "short_name": "EduConnect",
+  "name": "FreeLearn",
+  "short_name": "FreeLearn",
   "description": "Plateforme d'éducation et d'orientation pour Haïti",
   "start_url": "/",
   "display": "standalone",

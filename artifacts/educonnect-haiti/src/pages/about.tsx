@@ -21,7 +21,7 @@ export default function About() {
             Notre Mission : Démocratiser l'excellence.
           </h1>
           <p className="text-xl text-muted-foreground leading-relaxed">
-            EduConnect Haïti est né d'un constat simple : le talent est réparti équitablement, mais pas les opportunités. Nous construisons le pont entre la volonté d'apprendre de la jeunesse haïtienne et les ressources pour y parvenir.
+            FreeLearn est né d'un constat simple : le talent est réparti équitablement, mais pas les opportunités. Nous construisons le pont entre la volonté d'apprendre de la jeunesse haïtienne et les ressources pour y parvenir.
           </p>
         </div>
       </div>
@@ -85,7 +85,7 @@ export default function About() {
           <HeartHandshake className="w-12 h-12 text-secondary mx-auto mb-6" />
           <h2 className="text-3xl font-bold font-serif mb-4">Envie de contribuer ?</h2>
           <p className="text-muted-foreground mb-8">
-            Vous êtes enseignant, représentant d'une ONG ou gérant d'un centre communautaire ? Contactez-nous pour devenir partenaire d'EduConnect Haïti.
+            Vous êtes enseignant, représentant d'une ONG ou gérant d'un centre communautaire ? Contactez-nous pour devenir partenaire de FreeLearn.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4 text-left">

@@ -1,4 +1,4 @@
-const DB_NAME = "educonnect-lessons";
+const DB_NAME = "freelearn-lessons";
 const STORE = "videos";
 const YT_STORE = "youtube_ids";
 const VERSION = 2;
