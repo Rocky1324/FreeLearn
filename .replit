@@ -33,7 +33,7 @@ args = "PORT=19941 BASE_PATH=/ pnpm --filter @workspace/educonnect-haiti run dev
 waitForPort = 19941
 
 [agent]
-stack = "PNPM_WORKSPACE"
+stack = "BEST_EFFORT_FALLBACK"
 expertMode = true
 
 [postMerge]
