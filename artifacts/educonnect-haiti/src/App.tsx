@@ -3,8 +3,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/hooks/use-theme";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
-// Pages
+// Public pages
+import Landing from "@/pages/landing";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
+
+// App pages
 import Home from "@/pages/home";
 import Courses from "@/pages/courses";
 import CourseDetail from "@/pages/course-detail";
@@ -16,25 +23,42 @@ import About from "@/pages/about";
 import Admin from "@/pages/admin";
 import Flashcards from "@/pages/flashcards";
 import CalendarPage from "@/pages/calendar";
+import Dashboard from "@/pages/dashboard";
 import NotFound from "@/pages/not-found";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: 1 },
+  },
+});
+
+function P({ children }: { children: React.ReactNode }) {
+  return <ProtectedRoute>{children}</ProtectedRoute>;
+}
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/cours" component={Courses} />
-      <Route path="/cours/:id" component={CourseDetail} />
-      <Route path="/orientation" component={Orientation} />
-      <Route path="/opportunites" component={Opportunities} />
-      <Route path="/centres" component={Centers} />
-      <Route path="/ecoles" component={Schools} />
-      <Route path="/a-propos" component={About} />
-      <Route path="/admin" component={Admin} />
-      <Route path="/fiches" component={Flashcards} />
-      <Route path="/fiches/:courseId" component={Flashcards} />
-      <Route path="/calendrier" component={CalendarPage} />
+      {/* Public */}
+      <Route path="/bienvenue" component={Landing} />
+      <Route path="/connexion" component={Login} />
+      <Route path="/inscription" component={Register} />
+
+      {/* Protected */}
+      <Route path="/">{() => <P><Home /></P>}</Route>
+      <Route path="/cours">{() => <P><Courses /></P>}</Route>
+      <Route path="/cours/:id">{() => <P><CourseDetail /></P>}</Route>
+      <Route path="/tableau-de-bord">{() => <P><Dashboard /></P>}</Route>
+      <Route path="/orientation">{() => <P><Orientation /></P>}</Route>
+      <Route path="/opportunites">{() => <P><Opportunities /></P>}</Route>
+      <Route path="/centres">{() => <P><Centers /></P>}</Route>
+      <Route path="/ecoles">{() => <P><Schools /></P>}</Route>
+      <Route path="/a-propos">{() => <P><About /></P>}</Route>
+      <Route path="/admin">{() => <P><Admin /></P>}</Route>
+      <Route path="/fiches">{() => <P><Flashcards /></P>}</Route>
+      <Route path="/fiches/:courseId">{() => <P><Flashcards /></P>}</Route>
+      <Route path="/calendrier">{() => <P><CalendarPage /></P>}</Route>
+
       <Route component={NotFound} />
     </Switch>
   );
@@ -44,12 +68,14 @@ function App() {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
-          <Toaster />
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Router />
+            </WouterRouter>
+            <Toaster />
+          </TooltipProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

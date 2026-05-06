@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { Redirect } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,18 +9,16 @@ import {
   saveLessonVideo,
   deleteLessonVideo,
   listLessonVideos,
-  saveYoutubeId,
-  deleteYoutubeId,
-  listYoutubeIds,
   extractYoutubeId,
 } from "@/lib/lesson-storage";
+import { api } from "@/lib/api";
+import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import {
   CheckCircle2,
   Trash2,
   Upload,
   Info,
-  Save,
   Youtube,
   X,
   Download,
@@ -26,40 +26,83 @@ import {
   WifiOff,
   ChevronDown,
   ChevronUp,
-  LogOut,
   QrCode,
+  Loader2,
 } from "lucide-react";
-import { useAdminAuth } from "@/hooks/use-admin-auth";
-import { AdminLoginScreen } from "@/components/AdminLoginScreen";
 import { QRCodeModal } from "@/components/QRCodeModal";
 
 export default function Admin() {
-  const { authed, login, logout, error: authError, loading: authLoading } = useAdminAuth();
+  const { user, loading: authLoading } = useAuth();
+  const queryClient = useQueryClient();
+
   const [stored, setStored] = useState<string[]>([]);
-  const [ytIds, setYtIds] = useState<Record<string, string>>({});
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [urlDrafts, setUrlDrafts] = useState<Record<string, string>>({});
   const [downloading, setDownloading] = useState<Record<string, number | null>>({});
-  const [loading, setLoading] = useState(true);
+  const [localLoading, setLocalLoading] = useState(true);
   const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
-  const [qrCourse, setQrCourse] = useState<{ id: string; title: string } | null>(null);
+  const [qrCourse, setQrCourse] = useState<{ url: string; title: string } | null>(null);
   const abortRefs = useRef<Record<string, AbortController>>({});
 
-  const refresh = async () => {
+  // Fetch teacher YouTube IDs from DB
+  const { data: ytIds = {} } = useQuery<Record<string, string>>({
+    queryKey: ["teacher-videos"],
+    queryFn: () => api.get<Record<string, string>>("/api/teacher/videos"),
+    enabled: !!user,
+  });
+
+  // Save YouTube ID mutation
+  const saveYtMutation = useMutation({
+    mutationFn: ({ chapterId, youtubeId }: { chapterId: string; youtubeId: string }) =>
+      api.post("/api/teacher/videos", { chapterId, youtubeId }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["teacher-videos"] }),
+  });
+
+  // Delete YouTube ID mutation
+  const deleteYtMutation = useMutation({
+    mutationFn: (chapterId: string) => api.del(`/api/teacher/videos/${chapterId}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["teacher-videos"] }),
+  });
+
+  const refreshLocal = async () => {
     try {
-      const [keys, ids] = await Promise.all([listLessonVideos(), listYoutubeIds()]);
+      const keys = await listLessonVideos();
       setStored(keys);
-      setYtIds(ids);
     } catch (e) {
       console.error(e);
     } finally {
-      setLoading(false);
+      setLocalLoading(false);
     }
   };
 
   useEffect(() => {
-    refresh();
+    refreshLocal();
   }, []);
+
+  // Auth guards
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  if (!user) return <Redirect to="/connexion" />;
+  if (user.role !== "teacher") {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-20 text-center max-w-md">
+          <div className="text-5xl mb-4">🔒</div>
+          <h1 className="text-2xl font-bold mb-2">Accès réservé aux enseignants</h1>
+          <p className="text-muted-foreground mb-6">
+            Cette page est uniquement accessible aux comptes enseignants. Si vous êtes enseignant,
+            contactez l'administrateur pour obtenir un code d'accès.
+          </p>
+          <Button variant="outline" onClick={() => window.history.back()}>Retour</Button>
+        </div>
+      </Layout>
+    );
+  }
 
   const handleUpload = async (chapterId: string, file: File) => {
     if (!file.type.startsWith("video/")) {
@@ -74,7 +117,7 @@ export default function Admin() {
     try {
       await saveLessonVideo(chapterId, file);
       toast.success("Vidéo enregistrée pour ce chapitre.");
-      refresh();
+      refreshLocal();
     } catch (e) {
       console.error(e);
       toast.error("Échec de l'enregistrement.");
@@ -94,64 +137,37 @@ export default function Admin() {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const contentType = response.headers.get("content-type") || "";
-      if (!contentType.startsWith("video/") && !contentType.includes("octet-stream")) {
-        const guessedType = url.toLowerCase().endsWith(".mp4")
-          ? "video/mp4"
-          : url.toLowerCase().endsWith(".webm")
-          ? "video/webm"
-          : "video/mp4";
+      const guessedType = url.toLowerCase().endsWith(".webm") ? "video/webm" : "video/mp4";
+      const blobType = contentType.startsWith("video/") ? contentType : guessedType;
 
-        const reader = response.body?.getReader();
-        const chunks: Uint8Array[] = [];
-        let received = 0;
-        const total = Number(response.headers.get("content-length")) || 0;
+      const reader = response.body?.getReader();
+      const chunks: Uint8Array[] = [];
+      let received = 0;
+      const total = Number(response.headers.get("content-length")) || 0;
 
-        if (reader) {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(value);
-            received += value.length;
-            if (total > 0) {
-              setDownloading((d) => ({ ...d, [chapterId]: Math.round((received / total) * 100) }));
-            }
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          received += value.length;
+          if (total > 0) {
+            setDownloading((d) => ({ ...d, [chapterId]: Math.round((received / total) * 100) }));
           }
         }
-
-        const blob = new Blob(chunks, { type: guessedType });
-        await saveLessonVideo(chapterId, blob);
-      } else {
-        const reader = response.body?.getReader();
-        const chunks: Uint8Array[] = [];
-        let received = 0;
-        const total = Number(response.headers.get("content-length")) || 0;
-
-        if (reader) {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(value);
-            received += value.length;
-            if (total > 0) {
-              setDownloading((d) => ({ ...d, [chapterId]: Math.round((received / total) * 100) }));
-            }
-          }
-        }
-        const blob = new Blob(chunks, { type: contentType });
-        await saveLessonVideo(chapterId, blob);
       }
 
+      const blob = new Blob(chunks as BlobPart[], { type: blobType });
+      await saveLessonVideo(chapterId, blob);
       toast.success("Vidéo téléchargée et sauvegardée hors-ligne !");
       setUrlDrafts((d) => ({ ...d, [chapterId]: "" }));
-      refresh();
+      refreshLocal();
     } catch (e: unknown) {
       if (e instanceof Error && e.name === "AbortError") {
         toast.info("Téléchargement annulé.");
       } else {
         console.error(e);
-        toast.error(
-          "Impossible de télécharger la vidéo. Vérifiez que le lien est direct (MP4/WebM) et accessible.",
-        );
+        toast.error("Impossible de télécharger la vidéo. Vérifiez que le lien est direct (MP4/WebM).");
       }
     } finally {
       setDownloading((d) => {
@@ -171,7 +187,7 @@ export default function Admin() {
     try {
       await deleteLessonVideo(chapterId);
       toast.success("Vidéo retirée.");
-      refresh();
+      refreshLocal();
     } catch (e) {
       console.error(e);
       toast.error("Échec de la suppression.");
@@ -186,23 +202,19 @@ export default function Admin() {
       return;
     }
     try {
-      await saveYoutubeId(chapterId, id);
+      await saveYtMutation.mutateAsync({ chapterId, youtubeId: id });
       toast.success("Vidéo YouTube enregistrée pour ce chapitre.");
       setDrafts((d) => ({ ...d, [chapterId]: "" }));
-      refresh();
-    } catch (e) {
-      console.error(e);
+    } catch {
       toast.error("Échec de l'enregistrement.");
     }
   };
 
   const handleClearYoutube = async (chapterId: string) => {
     try {
-      await deleteYoutubeId(chapterId);
-      toast.success("Vidéo YouTube retirée. Le cours utilisera la vidéo par défaut.");
-      refresh();
-    } catch (e) {
-      console.error(e);
+      await deleteYtMutation.mutateAsync(chapterId);
+      toast.success("Vidéo YouTube retirée.");
+    } catch {
       toast.error("Échec de la suppression.");
     }
   };
@@ -223,32 +235,18 @@ export default function Admin() {
 
   const stats = getOfflineStats();
 
-  if (!authed) {
-    return (
-      <AdminLoginScreen
-        onLogin={login}
-        error={authError}
-        loading={authLoading}
-      />
-    );
-  }
-
   return (
     <Layout>
       <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <div className="flex items-start justify-between mb-3 gap-4">
-          <h1 className="text-3xl md:text-4xl font-bold font-serif">
-            Espace Enseignant
-          </h1>
-          <Button variant="ghost" size="sm" onClick={logout} className="shrink-0 text-muted-foreground">
-            <LogOut className="w-4 h-4 mr-2" />
-            Déconnexion
-          </Button>
+        <div className="mb-3">
+          <h1 className="text-3xl md:text-4xl font-bold font-serif">Espace Enseignant</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Connecté en tant que <strong>{user.displayName}</strong>
+          </p>
         </div>
         <p className="text-muted-foreground mb-8">
           Gérez les vidéos de chaque chapitre. Les vidéos MP4 sauvegardées
-          fonctionnent <strong>100% hors-ligne</strong>. Les liens YouTube
-          nécessitent une connexion internet.
+          fonctionnent <strong>100% hors-ligne</strong>. Les liens YouTube nécessitent une connexion.
         </p>
 
         {/* Stats banner */}
@@ -270,34 +268,22 @@ export default function Admin() {
         </div>
 
         {/* How-to guide */}
-        <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-xl p-4 mb-8 flex gap-3">
+        <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 text-blue-900 dark:text-blue-200 rounded-xl p-4 mb-8 flex gap-3">
           <Info className="w-5 h-5 shrink-0 mt-0.5" />
           <div className="text-sm leading-relaxed space-y-2">
             <p className="font-bold">Comment rendre les vidéos disponibles hors-ligne ?</p>
             <ol className="list-decimal ml-4 space-y-1">
-              <li>
-                <strong>Via une URL directe</strong> (recommandé) — Copiez un lien MP4 direct
-                depuis Google Drive, Dropbox, ou un serveur local. Le site télécharge et stocke
-                la vidéo dans le navigateur.
-              </li>
-              <li>
-                <strong>Via un fichier local</strong> — Branchez une clé USB avec les vidéos
-                MP4 et téléversez-les directement depuis votre appareil.
-              </li>
-              <li>
-                <strong>Via un lien YouTube</strong> — Fonctionne en ligne uniquement. Utile
-                pour les appareils avec connexion.
-              </li>
+              <li><strong>Via une URL directe</strong> — Copiez un lien MP4 depuis Google Drive, Dropbox ou un serveur local.</li>
+              <li><strong>Via un fichier local</strong> — Téléversez directement depuis une clé USB ou votre appareil.</li>
+              <li><strong>Via un lien YouTube</strong> — Connexion requise. Les liens sont maintenant sauvegardés dans la base de données et visibles par tous les élèves.</li>
             </ol>
-            <p className="text-xs text-blue-700 mt-2">
-              Les vidéos sont stockées dans ce navigateur uniquement. Pour partager avec tous
-              les élèves, chaque appareil doit répéter l'opération (ou utiliser un réseau local).
-            </p>
           </div>
         </div>
 
-        {loading ? (
-          <p className="text-muted-foreground">Chargement…</p>
+        {localLoading ? (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" /> Chargement…
+          </div>
         ) : (
           <div className="space-y-4">
             {courses.map((course) => {
@@ -309,7 +295,6 @@ export default function Admin() {
               return (
                 <section key={course.id} className="border rounded-2xl bg-card overflow-hidden">
                   <div className="flex items-center gap-2 px-5 py-4 hover:bg-muted/30 transition-colors">
-                    {/* Expand zone */}
                     <button
                       className="flex-1 text-left flex items-center gap-4 min-w-0"
                       onClick={() => setExpandedCourse(isExpanded ? null : course.id)}
@@ -317,9 +302,7 @@ export default function Admin() {
                       <div className="min-w-0 flex-1">
                         <h2 className="text-lg font-bold leading-tight">{course.title}</h2>
                         <p className="text-sm text-muted-foreground">
-                          {course.subject} · {course.level} ·{" "}
-                          {course.chapters.length} chapitre
-                          {course.chapters.length > 1 ? "s" : ""}
+                          {course.subject} · {course.level} · {course.chapters.length} chapitre{course.chapters.length > 1 ? "s" : ""}
                         </p>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
@@ -337,10 +320,9 @@ export default function Admin() {
                       </div>
                     </button>
 
-                    {/* QR Button */}
                     <button
-                      onClick={() => setQrCourse({ id: course.id, title: course.title })}
-                      title="Générer un QR code pour ce cours"
+                      onClick={() => setQrCourse({ url: `${window.location.origin}/cours/${course.id}`, title: course.title })}
+                      title="Générer un QR code"
                       className="shrink-0 p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors"
                     >
                       <QrCode className="w-5 h-5" />
@@ -358,29 +340,17 @@ export default function Admin() {
                         const isDownloading = progress !== undefined && progress !== null;
 
                         return (
-                          <div
-                            key={chapter.id}
-                            className="p-4 rounded-xl bg-muted/40 border space-y-4"
-                          >
+                          <div key={chapter.id} className="p-4 rounded-xl bg-muted/40 border space-y-4">
                             <div className="flex items-start justify-between gap-3 flex-wrap">
                               <div className="min-w-0">
                                 <p className="font-medium">{chapter.title}</p>
                                 <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                                   {hasFile ? (
-                                    <>
-                                      <WifiOff className="w-3 h-3 text-green-600" />
-                                      <span className="text-green-700 font-medium">Vidéo hors-ligne disponible</span>
-                                    </>
+                                    <><WifiOff className="w-3 h-3 text-green-600" /><span className="text-green-700 font-medium">Vidéo hors-ligne disponible</span></>
                                   ) : customYt ? (
-                                    <>
-                                      <Wifi className="w-3 h-3 text-yellow-600" />
-                                      <span className="text-yellow-700">YouTube (connexion requise)</span>
-                                    </>
+                                    <><Wifi className="w-3 h-3 text-yellow-600" /><span className="text-yellow-700">YouTube (connexion requise)</span></>
                                   ) : chapter.youtubeId ? (
-                                    <>
-                                      <Wifi className="w-3 h-3 text-yellow-600" />
-                                      <span className="text-yellow-700">Vidéo par défaut YouTube (connexion requise)</span>
-                                    </>
+                                    <><Wifi className="w-3 h-3 text-yellow-600" /><span className="text-yellow-700">Vidéo par défaut YouTube</span></>
                                   ) : (
                                     <span className="text-muted-foreground">Aucune vidéo configurée</span>
                                   )}
@@ -410,23 +380,13 @@ export default function Admin() {
                               {isDownloading ? (
                                 <div className="space-y-2">
                                   <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
-                                    <div
-                                      className="bg-primary h-3 rounded-full transition-all"
-                                      style={{ width: `${progress ?? 0}%` }}
-                                    />
+                                    <div className="bg-primary h-3 rounded-full transition-all" style={{ width: `${progress ?? 0}%` }} />
                                   </div>
                                   <div className="flex items-center justify-between">
                                     <p className="text-xs text-muted-foreground">
-                                      {progress === 0
-                                        ? "Connexion…"
-                                        : `Téléchargement : ${progress}%`}
+                                      {progress === 0 ? "Connexion…" : `Téléchargement : ${progress}%`}
                                     </p>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="text-red-600 h-7"
-                                      onClick={() => handleCancelDownload(chapter.id)}
-                                    >
+                                    <Button size="sm" variant="ghost" className="text-red-600 h-7" onClick={() => handleCancelDownload(chapter.id)}>
                                       Annuler
                                     </Button>
                                   </div>
@@ -438,28 +398,15 @@ export default function Admin() {
                                     inputMode="url"
                                     placeholder="https://… lien direct vers un fichier .mp4"
                                     value={urlDraft}
-                                    onChange={(e) =>
-                                      setUrlDrafts((d) => ({
-                                        ...d,
-                                        [chapter.id]: e.target.value,
-                                      }))
-                                    }
+                                    onChange={(e) => setUrlDrafts((d) => ({ ...d, [chapter.id]: e.target.value }))}
                                     className="flex-1"
                                   />
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleDownloadFromUrl(chapter.id)}
-                                    disabled={!urlDraft.trim()}
-                                    className="bg-green-600 hover:bg-green-700 text-white"
-                                  >
+                                  <Button size="sm" onClick={() => handleDownloadFromUrl(chapter.id)} disabled={!urlDraft.trim()} className="bg-green-600 hover:bg-green-700 text-white">
                                     <Download className="w-4 h-4 mr-2" />
                                     Télécharger
                                   </Button>
                                 </div>
                               )}
-                              <p className="text-xs text-muted-foreground">
-                                Lien direct MP4/WebM (Google Drive, Dropbox, serveur local…). La vidéo sera stockée dans ce navigateur.
-                              </p>
                             </div>
 
                             {/* Upload local file */}
@@ -487,12 +434,7 @@ export default function Admin() {
                                   </Button>
                                 </label>
                                 {hasFile && (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="text-red-600"
-                                    onClick={() => handleDelete(chapter.id)}
-                                  >
+                                  <Button size="sm" variant="ghost" className="text-red-600" onClick={() => handleDelete(chapter.id)}>
                                     <Trash2 className="w-4 h-4 mr-2" />
                                     Supprimer
                                   </Button>
@@ -516,11 +458,7 @@ export default function Admin() {
                                   >
                                     youtu.be/{customYt}
                                   </a>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleClearYoutube(chapter.id)}
-                                    className="ml-auto text-red-600 hover:text-red-800"
-                                  >
+                                  <button type="button" onClick={() => handleClearYoutube(chapter.id)} className="ml-auto text-red-600 hover:text-red-800">
                                     <X className="w-4 h-4" />
                                   </button>
                                 </div>
@@ -531,21 +469,11 @@ export default function Admin() {
                                   inputMode="url"
                                   placeholder="https://www.youtube.com/watch?v=…"
                                   value={draft}
-                                  onChange={(e) =>
-                                    setDrafts((d) => ({
-                                      ...d,
-                                      [chapter.id]: e.target.value,
-                                    }))
-                                  }
+                                  onChange={(e) => setDrafts((d) => ({ ...d, [chapter.id]: e.target.value }))}
                                   className="flex-1"
                                 />
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleSaveYoutube(chapter.id)}
-                                  disabled={!draft.trim()}
-                                >
-                                  <Save className="w-4 h-4 mr-2" />
+                                <Button size="sm" variant="outline" onClick={() => handleSaveYoutube(chapter.id)} disabled={!draft.trim() || saveYtMutation.isPending}>
+                                  {saveYtMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Youtube className="w-4 h-4 mr-1" />}
                                   Enregistrer
                                 </Button>
                               </div>
@@ -562,11 +490,10 @@ export default function Admin() {
         )}
       </div>
 
-      {/* QR Code Modal */}
       {qrCourse && (
         <QRCodeModal
+          courseUrl={qrCourse.url}
           courseTitle={qrCourse.title}
-          courseUrl={`${window.location.origin}${import.meta.env.BASE_URL.replace(/\/$/, "")}/cours/${qrCourse.id}`}
           onClose={() => setQrCourse(null)}
         />
       )}

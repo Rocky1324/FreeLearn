@@ -1,17 +1,32 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { BookOpen, Menu, X, Globe, WifiOff, MapPin, Moon, Sun, Layers, Calendar } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  BookOpen,
+  Menu,
+  X,
+  Globe,
+  WifiOff,
+  MapPin,
+  Moon,
+  Sun,
+  Layers,
+  Calendar,
+  LayoutDashboard,
+  LogOut,
+  ChevronDown,
+  GraduationCap,
+} from "lucide-react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useTheme } from "@/hooks/use-theme";
+import { useAuth } from "@/hooks/use-auth";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [lowConnexion, setLowConnexion] = useLocalStorage("connexion-faible", false);
   const [location] = useLocation();
   const { theme, toggle: toggleTheme } = useTheme();
-
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+  const { user, logout } = useAuth();
 
   const navLinks = [
     { href: "/", label: "Accueil" },
@@ -22,8 +37,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/opportunites", label: "Opportunités" },
     { href: "/ecoles", label: "Écoles" },
     { href: "/centres", label: "Centres" },
-    { href: "/admin", label: "Enseignants" },
+    ...(user?.role === "teacher" ? [{ href: "/admin", label: "Enseignants" }] : []),
   ];
+
+  const handleLogout = async () => {
+    setUserMenuOpen(false);
+    setIsMenuOpen(false);
+    await logout();
+  };
 
   return (
     <div className={`min-h-screen flex flex-col ${lowConnexion ? "connexion-faible" : ""}`}>
@@ -63,13 +84,70 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
 
-            <div className="hidden sm:flex items-center text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md">
-              <Globe className="h-3 w-3 mr-1" />
-              <span>Hors-ligne</span>
-            </div>
+            {/* User menu (desktop) */}
+            {user && (
+              <div className="hidden lg:block relative">
+                <button
+                  onClick={() => setUserMenuOpen((v) => !v)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-muted transition-colors text-sm font-medium"
+                >
+                  <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                    {user.displayName.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="max-w-[100px] truncate">{user.displayName.split(" ")[0]}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+
+                {userMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-30"
+                      onClick={() => setUserMenuOpen(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-1.5 w-52 bg-card border rounded-xl shadow-lg z-40 py-1 overflow-hidden">
+                      <div className="px-4 py-3 border-b">
+                        <p className="font-semibold text-sm truncate">{user.displayName}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                        {user.role === "teacher" && (
+                          <span className="inline-flex mt-1 items-center text-xs font-medium text-amber-700 bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 px-2 py-0.5 rounded-full">
+                            <GraduationCap className="w-3 h-3 mr-1" />
+                            Enseignant
+                          </span>
+                        )}
+                      </div>
+                      <Link
+                        href="/tableau-de-bord"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+                      >
+                        <LayoutDashboard className="w-4 h-4 text-muted-foreground" />
+                        Tableau de bord
+                      </Link>
+                      {user.role === "teacher" && (
+                        <Link
+                          href="/admin"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+                        >
+                          <BookOpen className="w-4 h-4 text-muted-foreground" />
+                          Espace enseignant
+                        </Link>
+                      )}
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors text-destructive"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Déconnexion
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
 
             {/* Mobile Menu Toggle */}
-            <button className="lg:hidden p-2 text-foreground" onClick={toggleMenu}>
+            <button className="lg:hidden p-2 text-foreground" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
@@ -93,6 +171,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   {link.label}
                 </Link>
               ))}
+              {/* Mobile user section */}
+              {user && (
+                <div className="pt-2 mt-1 border-t space-y-1">
+                  <Link
+                    href="/tableau-de-bord"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-2 py-2 px-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Tableau de bord
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2 py-2 px-3 rounded-lg text-sm font-medium text-destructive hover:bg-muted transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Déconnexion ({user.displayName.split(" ")[0]})
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -135,12 +233,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           <div className="space-y-4">
             <h4 className="font-bold text-lg">Ressources</h4>
-            <ul className="space-y-2 text-primary-foreground/80 space-y-2">
+            <ul className="space-y-2 text-primary-foreground/80">
               <li><Link href="/cours">Catalogue de cours</Link></li>
               <li className="flex items-center gap-1.5"><Layers className="h-3.5 w-3.5" /><Link href="/fiches">Fiches de révision</Link></li>
               <li className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /><Link href="/calendrier">Calendrier d'étude</Link></li>
               <li><Link href="/opportunites">Bourses et concours</Link></li>
-              <li><Link href="/admin">Espace enseignant</Link></li>
+              <li className="flex items-center gap-1.5"><LayoutDashboard className="h-3.5 w-3.5" /><Link href="/tableau-de-bord">Tableau de bord</Link></li>
             </ul>
           </div>
         </div>
