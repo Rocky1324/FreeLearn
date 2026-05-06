@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { BookOpen, Map, Compass, Wifi, GraduationCap, Users, Star, ArrowRight, CheckCircle } from "lucide-react";
+import { BookOpen, Map, Compass, Wifi, Star, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const features = [
@@ -38,9 +38,7 @@ export default function Landing() {
       <header className="border-b bg-card/80 backdrop-blur sticky top-0 z-40">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <GraduationCap className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src="/Logo.jpeg" alt="FreeLearn" className="h-9 w-9 rounded-lg object-cover" />
             <span className="font-bold text-xl">FreeLearn</span>
           </div>
           <div className="flex items-center gap-3">
@@ -164,7 +162,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="border-t py-8 px-4 text-center text-muted-foreground text-sm">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <GraduationCap className="w-4 h-4 text-primary" />
+          <img src="/Logo.jpeg" alt="FreeLearn" className="h-5 w-5 rounded object-cover" />
           <span className="font-bold text-foreground">FreeLearn</span>
         </div>
         <p>Éducation gratuite et accessible pour tous les élèves haïtiens.</p>
