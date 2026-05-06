@@ -14,16 +14,26 @@ async function request<T = unknown>(
   path: string,
   body?: unknown,
 ): Promise<T> {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    method,
-    headers: body !== undefined ? { "Content-Type": "application/json" } : {},
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-    credentials: "include",
-  });
+  let res;
+  try {
+    res = await fetch(`${API_BASE_URL}${path}`, {
+      method,
+      headers: body !== undefined ? { "Content-Type": "application/json" } : {},
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      credentials: "include",
+    });
+  } catch (err) {
+    // Erreur réseau (ex: le serveur n'est pas joignable ou l'URL est mauvaise)
+    console.error("Erreur de connexion API:", err);
+    throw new ApiError(
+      0,
+      `Impossible de contacter le serveur. Vérifiez que l'URL de l'API est correcte (${API_BASE_URL})`
+    );
+  }
 
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new ApiError(res.status, (data as any).error ?? "Erreur serveur");
+    throw new ApiError(res.status, (data as any).error ?? `Erreur serveur (${res.status})`);
   }
 
   return res.json() as Promise<T>;
