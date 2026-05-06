@@ -20,6 +20,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/calendrier", label: "Calendrier" },
     { href: "/orientation", label: "Orientation" },
     { href: "/opportunites", label: "Opportunités" },
+    { href: "/ecoles", label: "Écoles" },
     { href: "/centres", label: "Centres" },
     { href: "/admin", label: "Enseignants" },
   ];
