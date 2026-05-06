@@ -95,7 +95,8 @@ router.post("/register", authLimiter, async (req, res) => {
 
     setSession(res, token);
     res.status(201).json({ user });
-  } catch {
+  } catch (error) {
+    console.error("Erreur lors de l'inscription:", error);
     res.status(500).json({ error: "Erreur serveur." });
   }
 });
@@ -144,7 +145,8 @@ router.post("/login", authLimiter, async (req, res) => {
         role: user.role,
       },
     });
-  } catch {
+  } catch (error) {
+    console.error("Erreur lors de la connexion:", error);
     res.status(500).json({ error: "Erreur serveur." });
   }
 });
