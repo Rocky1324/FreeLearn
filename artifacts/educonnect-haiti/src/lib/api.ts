@@ -36,6 +36,15 @@ async function request<T = unknown>(
     throw new ApiError(res.status, (data as any).error ?? `Erreur serveur (${res.status})`);
   }
 
+  const contentType = res.headers.get("content-type");
+  if (!contentType || !contentType.includes("application/json")) {
+    console.error("Le serveur n'a pas renvoyé de JSON. Type reçu:", contentType);
+    throw new ApiError(
+      0,
+      "L'URL de l'API est mal configurée (le serveur a renvoyé du HTML au lieu de JSON). Vérifiez la variable VITE_API_URL."
+    );
+  }
+
   return res.json() as Promise<T>;
 }
 
