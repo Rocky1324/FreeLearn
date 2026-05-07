@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { AuthProvider } from "@/hooks/use-auth";
+import { LanguageProvider } from "@/hooks/use-language";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Public pages
@@ -24,6 +25,7 @@ import Admin from "@/pages/admin";
 import Flashcards from "@/pages/flashcards";
 import CalendarPage from "@/pages/calendar";
 import Dashboard from "@/pages/dashboard";
+import Forum from "@/pages/forum";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -58,6 +60,7 @@ function Router() {
       <Route path="/fiches">{() => <P><Flashcards /></P>}</Route>
       <Route path="/fiches/:courseId">{() => <P><Flashcards /></P>}</Route>
       <Route path="/calendrier">{() => <P><CalendarPage /></P>}</Route>
+      <Route path="/forum">{() => <P><Forum /></P>}</Route>
 
       <Route component={NotFound} />
     </Switch>
@@ -67,16 +70,18 @@ function Router() {
 function App() {
   return (
     <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <TooltipProvider>
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <Router />
-            </WouterRouter>
-            <Toaster />
-          </TooltipProvider>
-        </AuthProvider>
-      </QueryClientProvider>
+      <LanguageProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <TooltipProvider>
+              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                <Router />
+              </WouterRouter>
+              <Toaster />
+            </TooltipProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

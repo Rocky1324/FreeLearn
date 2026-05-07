@@ -1,0 +1,57 @@
+import type { Translations } from "./fr";
+
+export const ht: Translations = {
+  lang: "ht",
+  langLabel: "Kreyòl",
+  langToggle: "Français",
+  nav: {
+    home: "Akèy", courses: "Kou", flashcards: "Fich", calendar: "Kalandriye",
+    orientation: "Oryantasyon", opportunities: "Opòtinite", schools: "Lekòl",
+    centers: "Sant", forum: "Fowòm", teacher: "Pwofesè",
+    dashboard: "Tablo debò", teacherSpace: "Espas pwofesè", logout: "Dekonekte",
+  },
+  footer: {
+    tagline: "Bay chak jèn ayisyen menm chans pou reyisi grasa yon edikasyon aksesib, modèn epi anrasinen nan reyalite nou.",
+    zones: "Zòn nou sèvi", resources: "Resous", courseCatalog: "Katalòg kou",
+    flashcards: "Fich révizyon", studyCalendar: "Kalandriye etid",
+    opportunities: "Bous ak konkou", copyright: "Fyèman bati pou jènès la.",
+    lowConnexion: "Mòd koneksyon fèb", lowConnexionOn: "(Aktive)", lowConnexionOff: "(Dezaktive)",
+  },
+  forum: {
+    title: "Fowòm èd", subtitle: "Poze kesyon ou yo, ede kamarad ou yo",
+    newPost: "Nouvo kesyon", allCategories: "Tout matyè",
+    categories: {
+      mathematiques: "Matematik", sciences: "Syans", francais: "Fransè",
+      histoire: "Istwa & Jewografi", anglais: "Anglè", general: "Jeneral",
+    },
+    postTitle: "Tit kesyon ou",
+    postTitlePlaceholder: "Egz: Kijan pou rezoud yon ekwasyon 2yèm degre ?",
+    postBody: "Dekri kesyon ou an detay",
+    postBodyPlaceholder: "Eksplike pwoblèm ou, sa ou te eseye...",
+    category: "Matyè", publish: "Pibliye", cancel: "Anile",
+    replies: "repons", reply: "repons",
+    noReplies: "Pa gen repons pou kounye a. Swa premye a ede !",
+    writeReply: "Ekri yon repons...", sendReply: "Voye",
+    markSolved: "Mak kòm rezoud", solved: "Rezoud", pinned: "Epingle",
+    acceptAnswer: "Pi bon repons", accepted: "Pi bon repons",
+    delete: "Efase", confirmDelete: "Efase piblikasyon sa a ?",
+    back: "Retounen nan fowòm", by: "pa", teacher: "Pwofesè", student: "Elèv",
+    noPosts: "Pa gen kesyon pou kounye a. Swa premye a poze yon kesyon !",
+    loginToPost: "Konekte pou poze yon kesyon oswa reponn.",
+    postedOn: "Poste le", answeredBy: "Reponn pa",
+    loading: "Chajman...", error: "Enposib chaje fowòm nan.",
+    titleMin: "Tit la dwe gen omwen 5 karaktè.",
+    bodyMin: "Mesaj la dwe gen omwen 10 karaktè.",
+    replyMin: "Repons lan twò kout.",
+  },
+  landing: {
+    heroTitle: "Edikasyon gratis pou tout elèv ayisyen",
+    heroSubtitle: "Jwenn kou, fich révizyon ak zouti oryantasyon — kèlkeswa kote ou ye a, menm ak koneksyon limite.",
+    getStarted: "Kòmanse gratis", login: "Konekte",
+    register: "Enskri", connexion: "Koneksyon",
+  },
+  common: {
+    loading: "Chajman...", error: "Yon erè te rive.", save: "Anrejistre",
+    close: "Fèmen", confirm: "Konfime", yes: "Wi", no: "Non",
+  },
+};

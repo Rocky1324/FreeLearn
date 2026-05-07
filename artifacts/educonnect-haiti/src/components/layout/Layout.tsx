@@ -4,7 +4,6 @@ import {
   BookOpen,
   Menu,
   X,
-  Globe,
   WifiOff,
   MapPin,
   Moon,
@@ -15,10 +14,12 @@ import {
   LogOut,
   ChevronDown,
   GraduationCap,
+  MessageSquare,
 } from "lucide-react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/use-language";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -27,17 +28,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { theme, toggle: toggleTheme } = useTheme();
   const { user, logout } = useAuth();
+  const { t, toggle: toggleLang } = useLanguage();
 
   const navLinks = [
-    { href: "/", label: "Accueil" },
-    { href: "/cours", label: "Cours" },
-    { href: "/fiches", label: "Fiches" },
-    { href: "/calendrier", label: "Calendrier" },
-    { href: "/orientation", label: "Orientation" },
-    { href: "/opportunites", label: "Opportunités" },
-    { href: "/ecoles", label: "Écoles" },
-    { href: "/centres", label: "Centres" },
-    ...(user?.role === "teacher" ? [{ href: "/admin", label: "Enseignants" }] : []),
+    { href: "/", label: t.nav.home },
+    { href: "/cours", label: t.nav.courses },
+    { href: "/fiches", label: t.nav.flashcards },
+    { href: "/calendrier", label: t.nav.calendar },
+    { href: "/forum", label: t.nav.forum },
+    { href: "/orientation", label: t.nav.orientation },
+    { href: "/opportunites", label: t.nav.opportunities },
+    { href: "/ecoles", label: t.nav.schools },
+    { href: "/centres", label: t.nav.centers },
+    ...(user?.role === "teacher" ? [{ href: "/admin", label: t.nav.teacher }] : []),
   ];
 
   const handleLogout = async () => {
@@ -74,7 +77,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
+            {/* Language toggle */}
+            <button
+              onClick={toggleLang}
+              className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-muted transition-colors text-xs font-semibold text-muted-foreground hover:text-foreground border border-transparent hover:border-border"
+              title="Changer de langue / Chanje lang"
+            >
+              {t.langToggle}
+            </button>
+
             {/* Dark mode toggle */}
             <button
               onClick={toggleTheme}
@@ -111,7 +123,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         {user.role === "teacher" && (
                           <span className="inline-flex mt-1 items-center text-xs font-medium text-amber-700 bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 px-2 py-0.5 rounded-full">
                             <GraduationCap className="w-3 h-3 mr-1" />
-                            Enseignant
+                            {t.nav.teacher}
                           </span>
                         )}
                       </div>
@@ -121,7 +133,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors"
                       >
                         <LayoutDashboard className="w-4 h-4 text-muted-foreground" />
-                        Tableau de bord
+                        {t.nav.dashboard}
+                      </Link>
+                      <Link
+                        href="/forum"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+                      >
+                        <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                        {t.nav.forum}
                       </Link>
                       {user.role === "teacher" && (
                         <Link
@@ -130,7 +150,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                           className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors"
                         >
                           <BookOpen className="w-4 h-4 text-muted-foreground" />
-                          Espace enseignant
+                          {t.nav.teacherSpace}
                         </Link>
                       )}
                       <button
@@ -138,7 +158,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         className="w-full flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors text-destructive"
                       >
                         <LogOut className="w-4 h-4" />
-                        Déconnexion
+                        {t.nav.logout}
                       </button>
                     </div>
                   </>
@@ -171,6 +191,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   {link.label}
                 </Link>
               ))}
+              {/* Mobile: lang toggle */}
+              <button
+                onClick={() => { toggleLang(); setIsMenuOpen(false); }}
+                className="text-left text-sm font-medium py-2 px-3 rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+              >
+                🌐 {t.langToggle}
+              </button>
               {/* Mobile user section */}
               {user && (
                 <div className="pt-2 mt-1 border-t space-y-1">
@@ -180,14 +207,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     className="flex items-center gap-2 py-2 px-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
                   >
                     <LayoutDashboard className="w-4 h-4" />
-                    Tableau de bord
+                    {t.nav.dashboard}
                   </Link>
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-2 py-2 px-3 rounded-lg text-sm font-medium text-destructive hover:bg-muted transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
-                    Déconnexion ({user.displayName.split(" ")[0]})
+                    {t.nav.logout} ({user.displayName.split(" ")[0]})
                   </button>
                 </div>
               )}
@@ -208,7 +235,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <span className="font-serif font-bold text-xl">FreeLearn</span>
             </div>
             <p className="text-primary-foreground/80 max-w-sm">
-              Donner à chaque jeune haïtien les mêmes chances de réussir grâce à une éducation accessible, moderne et ancrée dans notre réalité.
+              {t.footer.tagline}
             </p>
             <div className="flex items-center space-x-2 text-sm text-primary-foreground/60 pt-4">
               <button
@@ -216,13 +243,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 className="flex items-center hover:text-white transition-colors"
               >
                 <WifiOff className="h-4 w-4 mr-2" />
-                Mode connexion faible {lowConnexion ? "(Activé)" : "(Désactivé)"}
+                {t.footer.lowConnexion} {lowConnexion ? t.footer.lowConnexionOn : t.footer.lowConnexionOff}
               </button>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h4 className="font-bold text-lg">Zones Desservies</h4>
+            <h4 className="font-bold text-lg">{t.footer.zones}</h4>
             <ul className="space-y-2 text-primary-foreground/80">
               <li className="flex items-center"><MapPin className="h-4 w-4 mr-2" /> Cité Soleil</li>
               <li className="flex items-center"><MapPin className="h-4 w-4 mr-2" /> Bel-Air</li>
@@ -232,18 +259,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="space-y-4">
-            <h4 className="font-bold text-lg">Ressources</h4>
+            <h4 className="font-bold text-lg">{t.footer.resources}</h4>
             <ul className="space-y-2 text-primary-foreground/80">
-              <li><Link href="/cours">Catalogue de cours</Link></li>
-              <li className="flex items-center gap-1.5"><Layers className="h-3.5 w-3.5" /><Link href="/fiches">Fiches de révision</Link></li>
-              <li className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /><Link href="/calendrier">Calendrier d'étude</Link></li>
-              <li><Link href="/opportunites">Bourses et concours</Link></li>
-              <li className="flex items-center gap-1.5"><LayoutDashboard className="h-3.5 w-3.5" /><Link href="/tableau-de-bord">Tableau de bord</Link></li>
+              <li><Link href="/cours">{t.footer.courseCatalog}</Link></li>
+              <li className="flex items-center gap-1.5"><Layers className="h-3.5 w-3.5" /><Link href="/fiches">{t.footer.flashcards}</Link></li>
+              <li className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /><Link href="/calendrier">{t.footer.studyCalendar}</Link></li>
+              <li><Link href="/opportunites">{t.footer.opportunities}</Link></li>
+              <li className="flex items-center gap-1.5"><MessageSquare className="h-3.5 w-3.5" /><Link href="/forum">{t.nav.forum}</Link></li>
+              <li className="flex items-center gap-1.5"><LayoutDashboard className="h-3.5 w-3.5" /><Link href="/tableau-de-bord">{t.nav.dashboard}</Link></li>
             </ul>
           </div>
         </div>
         <div className="container mx-auto px-4 mt-8 pt-8 border-t border-primary-foreground/20 text-center text-sm text-primary-foreground/60">
-          © {new Date().getFullYear()} FreeLearn. Fièrement construit pour la jeunesse.
+          © {new Date().getFullYear()} FreeLearn. {t.footer.copyright}
         </div>
       </footer>
     </div>
