@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { ApiError } from "@/lib/api";
+import { useLanguage } from "@/hooks/use-language";
 
 export default function Login() {
   const { login, user } = useAuth();
   const [, navigate] = useLocation();
+  const { t } = useLanguage();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,7 +32,7 @@ export default function Login() {
       await login(email.trim(), password);
       navigate("/");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Erreur de connexion.");
+      setError(err instanceof ApiError ? err.message : t.login.error);
     } finally {
       setLoading(false);
     }
@@ -51,15 +53,13 @@ export default function Login() {
               </span>
             </div>
           </Link>
-          <h1 className="text-2xl font-bold mt-6 mb-1">Connexion</h1>
-          <p className="text-muted-foreground text-sm">
-            Content de te revoir !
-          </p>
+          <h1 className="text-2xl font-bold mt-6 mb-1">{t.login.title}</h1>
+          <p className="text-muted-foreground text-sm">{t.login.subtitle}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t.login.email}</Label>
             <Input
               id="email"
               type="email"
@@ -72,7 +72,7 @@ export default function Login() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="password">Mot de passe</Label>
+            <Label htmlFor="password">{t.login.password}</Label>
             <div className="relative">
               <Input
                 id="password"
@@ -103,14 +103,14 @@ export default function Login() {
 
           <Button type="submit" className="w-full" disabled={loading}>
             {loading && <Loader2 className="mr-2 w-4 h-4 animate-spin" />}
-            Se connecter
+            {t.login.submit}
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          Pas encore de compte ?{" "}
+          {t.login.noAccount}{" "}
           <Link href="/inscription" className="text-primary font-semibold hover:underline">
-            S'inscrire gratuitement
+            {t.login.register}
           </Link>
         </p>
       </div>

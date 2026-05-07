@@ -1,20 +1,21 @@
 import { Layout } from "@/components/layout/Layout";
 import { centers } from "@/data/centers";
 import { MapPin, Clock, Laptop, Wifi, Users, Building } from "lucide-react";
-
+import { useLanguage } from "@/hooks/use-language";
 import centreImg from "@/assets/images/centre.png";
 
 export default function Centers() {
+  const { t } = useLanguage();
   return (
     <Layout>
       <div className="bg-background border-b">
         <div className="container mx-auto px-4 py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
             <h1 className="text-4xl md:text-5xl font-bold font-serif leading-tight">
-              Centres Relais FreeLearn
+              {t.centers.title}
             </h1>
             <p className="text-xl text-muted-foreground">
-              Pas d'internet à la maison ? Aucun problème. Nos centres communautaires partenaires vous offrent l'accès gratuit aux équipements nécessaires pour apprendre.
+              {t.centers.subtitle}
             </p>
           </div>
           <div className="relative rounded-2xl overflow-hidden shadow-xl border">
@@ -27,9 +28,9 @@ export default function Centers() {
 
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold font-serif mb-4">Trouvez un centre près de chez vous</h2>
+          <h2 className="text-3xl font-bold font-serif mb-4">{t.centers.findTitle}</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Nous avons identifié des bibliothèques, écoles et centres communautaires dans nos zones prioritaires pour vous accueillir dans de bonnes conditions.
+            {t.centers.findSubtitle}
           </p>
         </div>
 
@@ -60,7 +61,7 @@ export default function Centers() {
                 </div>
                 
                 <div className="pt-4 mt-4 border-t">
-                  <h4 className="text-xs uppercase font-bold text-muted-foreground mb-3 tracking-wider">Équipements disponibles</h4>
+                  <h4 className="text-xs uppercase font-bold text-muted-foreground mb-3 tracking-wider">{t.centers.equipment}</h4>
                   <ul className="space-y-2">
                     {center.equipment.map((eq, idx) => {
                       let Icon = Building;

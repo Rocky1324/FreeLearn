@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { courses } from "@/data/courses";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useProgress } from "@/hooks/use-progress";
+import { useLanguage } from "@/hooks/use-language";
 
-const LEVEL_GROUPS = [
+const LEVEL_GROUPS_FR = [
   { label: "Tous les niveaux", value: "Tous" },
   { label: "1ère – 3ème AF", value: ["1ère AF", "2ème AF", "3ème AF"] },
   { label: "4ème – 6ème AF", value: ["4ème AF", "5ème AF", "6ème AF"] },
@@ -17,33 +18,35 @@ const LEVEL_GROUPS = [
 ];
 
 export default function Courses() {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSubject, setSelectedSubject] = useState<string>("Tous");
   const [selectedLevelGroup, setSelectedLevelGroup] = useState<string>("Tous");
   const [downloadedCourses] = useLocalStorage<Record<string, boolean>>("downloaded-courses", {});
   const { courseStats } = useProgress();
 
-  const allSubjects = ["Tous", ...Array.from(new Set(courses.map(c => c.subject))).sort()];
+  const allSubjects = [t.courses.allLevels.replace("niveaux", "").trim(), ...Array.from(new Set(courses.map(c => c.subject))).sort()];
+  const subjectAll = "Tous";
 
   const filteredCourses = courses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           course.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSubject = selectedSubject === "Tous" || course.subject === selectedSubject;
-    const group = LEVEL_GROUPS.find(g => g.label === selectedLevelGroup || (g.value === "Tous" && selectedLevelGroup === "Tous"));
+    const matchesSubject = selectedSubject === subjectAll || course.subject === selectedSubject;
+    const group = LEVEL_GROUPS_FR.find(g => g.label === selectedLevelGroup || (g.value === "Tous" && selectedLevelGroup === "Tous"));
     const levels = group && Array.isArray(group.value) ? group.value : null;
     const matchesLevel = selectedLevelGroup === "Tous" || (levels !== null && levels.includes(course.level));
     return matchesSearch && matchesSubject && matchesLevel;
   });
+
+  const subjectsList = ["Tous", ...Array.from(new Set(courses.map(c => c.subject))).sort()];
 
   return (
     <Layout>
       <div className="bg-muted/30 py-12 border-b">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl space-y-4">
-            <h1 className="text-4xl font-bold font-serif">Catalogue de Cours</h1>
-            <p className="text-lg text-muted-foreground">
-              Des leçons claires, des résumés concis et des exercices interactifs pour toutes les classes — de la 1ère AF jusqu'à la Philo.
-            </p>
+            <h1 className="text-4xl font-bold font-serif">{t.courses.title}</h1>
+            <p className="text-lg text-muted-foreground">{t.courses.subtitle}</p>
           </div>
         </div>
       </div>
@@ -53,9 +56,9 @@ export default function Courses() {
           {/* Sidebar / Filters */}
           <div className="w-full md:w-64 space-y-6">
             <div className="space-y-3">
-              <h3 className="font-bold flex items-center"><Filter className="w-4 h-4 mr-2"/> Niveau</h3>
+              <h3 className="font-bold flex items-center"><Filter className="w-4 h-4 mr-2"/> {t.courses.levelFilter}</h3>
               <div className="flex flex-col space-y-1">
-                {LEVEL_GROUPS.map(group => (
+                {LEVEL_GROUPS_FR.map(group => (
                   <button
                     key={group.label}
                     onClick={() => setSelectedLevelGroup(group.label === "Tous les niveaux" ? "Tous" : group.label)}
@@ -71,9 +74,9 @@ export default function Courses() {
               </div>
             </div>
             <div className="space-y-3">
-              <h3 className="font-bold flex items-center"><Filter className="w-4 h-4 mr-2"/> Matières</h3>
+              <h3 className="font-bold flex items-center"><Filter className="w-4 h-4 mr-2"/> {t.courses.subjectFilter}</h3>
               <div className="flex flex-col space-y-1">
-                {allSubjects.map(subject => (
+                {subjectsList.map(subject => (
                   <button
                     key={subject}
                     onClick={() => setSelectedSubject(subject)}
@@ -92,22 +95,20 @@ export default function Courses() {
 
           {/* Main Content */}
           <div className="flex-1 space-y-6">
-            {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input 
                 type="text" 
-                placeholder="Rechercher un cours (ex: Algèbre, Grammaire...)" 
+                placeholder={t.courses.searchPlaceholder}
                 className="pl-10 py-6 text-lg rounded-xl"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 
-            {/* Results */}
             <div className="space-y-4">
               <p className="text-sm font-medium text-muted-foreground">
-                {filteredCourses.length} cours trouvé{filteredCourses.length > 1 ? 's' : ''}
+                {filteredCourses.length} {filteredCourses.length > 1 ? t.courses.foundPlural : t.courses.found}
               </p>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -136,7 +137,7 @@ export default function Courses() {
                           return (
                             <div className="space-y-1">
                               <div className="flex justify-between text-xs text-muted-foreground">
-                                <span>{stats.done}/{stats.total} chapitres</span>
+                                <span>{stats.done}/{stats.total} {t.courses.chapters}</span>
                                 <span className="font-semibold text-primary">{stats.pct}%</span>
                               </div>
                               <div className="h-1.5 bg-muted rounded-full overflow-hidden">
@@ -152,11 +153,11 @@ export default function Courses() {
                         </span>
                         {downloadedCourses[course.id] ? (
                           <span className="text-xs font-bold text-green-600 flex items-center bg-green-100 px-2 py-1 rounded">
-                            Hors-ligne dispo
+                            {t.courses.offlineAvailable}
                           </span>
                         ) : (
                           <span className="text-sm font-bold text-primary flex items-center group-hover:underline">
-                            Voir le cours
+                            {t.courses.seeCourse}
                           </span>
                         )}
                       </div>
@@ -166,12 +167,12 @@ export default function Courses() {
 
                 {filteredCourses.length === 0 && (
                   <div className="col-span-full py-12 text-center bg-muted/30 rounded-2xl border border-dashed">
-                    <p className="text-muted-foreground font-medium">Aucun cours ne correspond à votre recherche.</p>
+                    <p className="text-muted-foreground font-medium">{t.courses.noResults}</p>
                     <Button 
                       variant="link" 
-                      onClick={() => { setSearchTerm(""); setSelectedSubject("Tous"); setSelectedLevelGroup("Tous"); }}
+                      onClick={() => { setSearchTerm(""); setSelectedSubject(subjectAll); setSelectedLevelGroup("Tous"); }}
                     >
-                      Réinitialiser les filtres
+                      {t.courses.resetFilters}
                     </Button>
                   </div>
                 )}

@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { ApiError } from "@/lib/api";
+import { useLanguage } from "@/hooks/use-language";
 
 export default function Register() {
   const { register, user } = useAuth();
   const [, navigate] = useLocation();
+  const { t } = useLanguage();
 
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
@@ -31,7 +33,7 @@ export default function Register() {
     setError("");
 
     if (password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas.");
+      setError(t.register.passwordMismatch);
       return;
     }
 
@@ -45,7 +47,7 @@ export default function Register() {
       );
       navigate("/");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Erreur lors de l'inscription.");
+      setError(err instanceof ApiError ? err.message : t.register.error);
     } finally {
       setLoading(false);
     }
@@ -66,19 +68,17 @@ export default function Register() {
               </span>
             </div>
           </Link>
-          <h1 className="text-2xl font-bold mt-6 mb-1">Créer un compte</h1>
-          <p className="text-muted-foreground text-sm">
-            Gratuit et sans engagement
-          </p>
+          <h1 className="text-2xl font-bold mt-6 mb-1">{t.register.title}</h1>
+          <p className="text-muted-foreground text-sm">{t.register.subtitle}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name">Prénom et nom</Label>
+            <Label htmlFor="name">{t.register.name}</Label>
             <Input
               id="name"
               type="text"
-              placeholder="Jean Baptiste"
+              placeholder={t.register.namePlaceholder}
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               required
@@ -87,7 +87,7 @@ export default function Register() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t.register.email}</Label>
             <Input
               id="email"
               type="email"
@@ -100,12 +100,12 @@ export default function Register() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="password">Mot de passe</Label>
+            <Label htmlFor="password">{t.register.password}</Label>
             <div className="relative">
               <Input
                 id="password"
                 type={showPwd ? "text" : "password"}
-                placeholder="8 caractères minimum"
+                placeholder={t.register.passwordPlaceholder}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -124,7 +124,7 @@ export default function Register() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="confirm">Confirmer le mot de passe</Label>
+            <Label htmlFor="confirm">{t.register.confirmPassword}</Label>
             <Input
               id="confirm"
               type={showPwd ? "text" : "password"}
@@ -148,13 +148,13 @@ export default function Register() {
               ) : (
                 <ChevronDown className="w-3 h-3" />
               )}
-              Vous êtes enseignant ? Entrez votre code d'accès
+              {t.register.teacherToggle}
             </button>
             {showTeacherCode && (
               <div className="mt-2">
                 <Input
                   type="text"
-                  placeholder="Code enseignant"
+                  placeholder={t.register.teacherCode}
                   value={teacherCode}
                   onChange={(e) => setTeacherCode(e.target.value)}
                   autoComplete="off"
@@ -171,14 +171,14 @@ export default function Register() {
 
           <Button type="submit" className="w-full" disabled={loading}>
             {loading && <Loader2 className="mr-2 w-4 h-4 animate-spin" />}
-            Créer mon compte
+            {t.register.submit}
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          Déjà un compte ?{" "}
+          {t.register.hasAccount}{" "}
           <Link href="/connexion" className="text-primary font-semibold hover:underline">
-            Se connecter
+            {t.register.login}
           </Link>
         </p>
       </div>

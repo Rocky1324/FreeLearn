@@ -1,19 +1,27 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { Search, Filter, Calendar, MapPin, Building2, Bookmark, BookmarkCheck, ArrowRight } from "lucide-react";
+import { Search, Calendar, MapPin, Building2, Bookmark, BookmarkCheck, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { opportunities } from "@/data/opportunities";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { useLanguage } from "@/hooks/use-language";
 
 export default function Opportunities() {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<string>("Tous");
   const [savedOpps, setSavedOpps] = useLocalStorage<Record<string, boolean>>("saved-opportunities", {});
 
-  const types = ["Tous", "Bourse", "Concours", "Formation", "Stage"];
+  const types = [
+    { key: "Tous", label: t.opportunities.types.all },
+    { key: "Bourse", label: t.opportunities.types.bourse },
+    { key: "Concours", label: t.opportunities.types.concours },
+    { key: "Formation", label: t.opportunities.types.formation },
+    { key: "Stage", label: t.opportunities.types.stage },
+  ];
 
   const filteredOpps = opportunities.filter(opp => {
     const matchesSearch = opp.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -27,22 +35,19 @@ export default function Opportunities() {
     const newSaved = { ...savedOpps };
     if (newSaved[id]) {
       delete newSaved[id];
-      toast("Retiré des favoris");
+      toast(t.opportunities.removedToast);
     } else {
       newSaved[id] = true;
-      toast.success("Enregistré dans vos favoris !");
+      toast.success(t.opportunities.savedToast);
     }
     setSavedOpps(newSaved);
   };
 
-  // Helper to format date
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     const today = new Date();
-    const diffTime = date.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays < 0) return { text: "Expiré", color: "text-red-500", bg: "bg-red-50" };
+    const diffDays = Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return { text: t.opportunities.expired, color: "text-red-500", bg: "bg-red-50" };
     if (diffDays <= 7) return { text: `J-${diffDays}`, color: "text-orange-600", bg: "bg-orange-50" };
     return { text: new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(date), color: "text-muted-foreground", bg: "bg-muted/50" };
   };
@@ -51,10 +56,8 @@ export default function Opportunities() {
     <Layout>
       <div className="bg-primary text-primary-foreground py-16">
         <div className="container mx-auto px-4 text-center max-w-3xl space-y-6">
-          <h1 className="text-4xl md:text-5xl font-bold font-serif">Bourses & Opportunités</h1>
-          <p className="text-xl opacity-90">
-            Ne laissez pas les contraintes financières freiner vos ambitions. Découvrez des financements, concours et formations gratuites.
-          </p>
+          <h1 className="text-4xl md:text-5xl font-bold font-serif">{t.opportunities.title}</h1>
+          <p className="text-xl opacity-90">{t.opportunities.subtitle}</p>
         </div>
       </div>
 
@@ -62,9 +65,9 @@ export default function Opportunities() {
         <div className="flex flex-col md:flex-row gap-6 mb-10">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input 
-              type="text" 
-              placeholder="Rechercher (ex: Informatique, Bourse d'excellence...)" 
+            <Input
+              type="text"
+              placeholder={t.opportunities.searchPlaceholder}
               className="pl-10 h-12 rounded-xl bg-muted/30 border-transparent focus:border-primary focus:bg-background transition-colors"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -73,12 +76,12 @@ export default function Opportunities() {
           <div className="flex overflow-x-auto pb-2 md:pb-0 gap-2 scrollbar-hide">
             {types.map(type => (
               <Button
-                key={type}
-                variant={selectedType === type ? "default" : "outline"}
-                className={`rounded-full shrink-0 ${selectedType === type ? 'font-bold' : ''}`}
-                onClick={() => setSelectedType(type)}
+                key={type.key}
+                variant={selectedType === type.key ? "default" : "outline"}
+                className={`rounded-full shrink-0 ${selectedType === type.key ? 'font-bold' : ''}`}
+                onClick={() => setSelectedType(type.key)}
               >
-                {type}
+                {type.label}
               </Button>
             ))}
           </div>
@@ -93,7 +96,7 @@ export default function Opportunities() {
               <Dialog key={opp.id}>
                 <DialogTrigger asChild>
                   <div className="bg-card border rounded-2xl p-6 hover:shadow-lg hover:border-primary/30 transition-all cursor-pointer group flex flex-col h-full relative">
-                    <button 
+                    <button
                       onClick={(e) => toggleSave(opp.id, e)}
                       className="absolute top-4 right-4 p-2 rounded-full hover:bg-muted transition-colors"
                     >
@@ -119,7 +122,7 @@ export default function Opportunities() {
                       <div className="flex items-center text-sm font-medium pt-2">
                         <Calendar className="w-4 h-4 mr-2 text-muted-foreground shrink-0" />
                         <span className={`${deadlineInfo.color} px-2 py-0.5 rounded ${deadlineInfo.bg}`}>
-                          Clôture: {deadlineInfo.text}
+                          {deadlineInfo.text}
                         </span>
                       </div>
                     </div>
@@ -134,7 +137,6 @@ export default function Opportunities() {
                   </div>
                 </DialogTrigger>
 
-                {/* Detail Modal */}
                 <DialogContent className="sm:max-w-lg rounded-2xl">
                   <DialogHeader>
                     <div className="flex justify-between items-start mb-2 pr-6">
@@ -147,35 +149,35 @@ export default function Opportunities() {
                     </div>
                     <DialogTitle className="text-2xl font-serif leading-tight">{opp.title}</DialogTitle>
                     <DialogDescription className="text-base pt-2">
-                      Offert par <span className="font-bold text-foreground">{opp.organization}</span>
+                      {t.opportunities.offeredBy} <span className="font-bold text-foreground">{opp.organization}</span>
                     </DialogDescription>
                   </DialogHeader>
 
                   <div className="space-y-6 py-4">
                     <div className="bg-muted/50 rounded-xl p-4 grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-xs text-muted-foreground uppercase font-bold mb-1">Date limite</p>
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-1">{t.opportunities.deadline}</p>
                         <p className={`text-sm font-bold ${deadlineInfo.color}`}>{deadlineInfo.text}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground uppercase font-bold mb-1">Lieu</p>
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-1">{t.opportunities.location}</p>
                         <p className="text-sm font-medium">{opp.location}</p>
                       </div>
                       <div className="col-span-2">
-                        <p className="text-xs text-muted-foreground uppercase font-bold mb-1">Niveau requis</p>
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-1">{t.opportunities.level}</p>
                         <p className="text-sm font-medium">{opp.niveau}</p>
                       </div>
                     </div>
 
                     <div>
-                      <h4 className="font-bold mb-2">Description</h4>
+                      <h4 className="font-bold mb-2">{t.opportunities.description}</h4>
                       <p className="text-muted-foreground leading-relaxed">{opp.description}</p>
                     </div>
                   </div>
 
                   <div className="pt-4 border-t flex flex-col gap-3">
                     <Button className="w-full font-bold">
-                      Postuler sur le site officiel <ArrowRight className="w-4 h-4 ml-2" />
+                      {t.opportunities.apply} <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </div>
                 </DialogContent>
@@ -185,9 +187,9 @@ export default function Opportunities() {
 
           {filteredOpps.length === 0 && (
             <div className="col-span-full py-16 text-center bg-muted/20 border border-dashed rounded-2xl">
-              <p className="text-muted-foreground text-lg">Aucune opportunité ne correspond à vos filtres.</p>
-              <Button variant="link" onClick={() => {setSearchTerm(""); setSelectedType("Tous");}} className="mt-2">
-                Effacer les filtres
+              <p className="text-muted-foreground text-lg">{t.opportunities.noResults}</p>
+              <Button variant="link" onClick={() => { setSearchTerm(""); setSelectedType("Tous"); }} className="mt-2">
+                {t.opportunities.clearFilters}
               </Button>
             </div>
           )}

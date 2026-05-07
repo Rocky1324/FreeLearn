@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { courses } from "@/data/courses";
+import { useLanguage } from "@/hooks/use-language";
 
 interface DashboardData {
   streak: number;
@@ -29,6 +30,7 @@ interface DashboardData {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { t, lang } = useLanguage();
 
   const { data, isLoading } = useQuery<DashboardData>({
     queryKey: ["dashboard"],
@@ -64,10 +66,10 @@ export default function Dashboard() {
         {/* Header */}
         <div className="mb-10">
           <p className="text-muted-foreground text-sm font-medium mb-1">
-            Tableau de bord
+            {t.dashboard.subtitle}
           </p>
           <h1 className="text-3xl font-bold font-serif">
-            Bonjour, {user?.displayName?.split(" ")[0]} 👋
+            {t.dashboard.greeting}, {user?.displayName?.split(" ")[0]} 👋
           </h1>
         </div>
 
@@ -76,30 +78,30 @@ export default function Dashboard() {
           <StatCard
             icon={<Flame className="w-5 h-5 text-orange-500" />}
             iconBg="bg-orange-100 dark:bg-orange-950/30"
-            label="Jours consécutifs"
+            label={t.dashboard.streakLabel}
             value={`${data?.streak ?? 0}`}
-            sub="série d'apprentissage"
+            sub={t.dashboard.streakSub}
           />
           <StatCard
             icon={<BookOpen className="w-5 h-5 text-primary" />}
             iconBg="bg-primary/10"
-            label="Chapitres terminés"
+            label={t.dashboard.chaptersLabel}
             value={`${data?.totalCompleted ?? 0}`}
-            sub="au total"
+            sub={t.dashboard.chaptersSub}
           />
           <StatCard
             icon={<Clock className="w-5 h-5 text-blue-500" />}
             iconBg="bg-blue-100 dark:bg-blue-950/30"
-            label="Heures estimées"
+            label={t.dashboard.hoursLabel}
             value={`${data?.estimatedStudyHours ?? 0}h`}
-            sub="d'apprentissage"
+            sub={t.dashboard.hoursSub}
           />
           <StatCard
             icon={<Trophy className="w-5 h-5 text-amber-500" />}
             iconBg="bg-amber-100 dark:bg-amber-950/30"
-            label="Cours en cours"
+            label={t.dashboard.coursesLabel}
             value={`${allCoursesStarted}`}
-            sub="cours commencés"
+            sub={t.dashboard.coursesSub}
           />
         </div>
 
@@ -108,11 +110,11 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-primary" />
-              Ma progression
+              {t.dashboard.progressTitle}
             </h2>
             <Link href="/cours">
               <Button variant="ghost" size="sm" className="gap-1">
-                Tous les cours <ChevronRight className="w-4 h-4" />
+                {t.dashboard.allCourses} <ChevronRight className="w-4 h-4" />
               </Button>
             </Link>
           </div>
@@ -120,12 +122,10 @@ export default function Dashboard() {
           {coursesInProgress.length === 0 ? (
             <div className="bg-card border rounded-2xl p-10 text-center shadow-sm">
               <BookOpen className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-              <p className="font-semibold text-lg mb-1">Aucun cours commencé</p>
-              <p className="text-muted-foreground text-sm mb-5">
-                Explore le catalogue et marque tes premiers chapitres comme terminés.
-              </p>
+              <p className="font-semibold text-lg mb-1">{t.dashboard.noCoursesTitle}</p>
+              <p className="text-muted-foreground text-sm mb-5">{t.dashboard.noCoursesHint}</p>
               <Link href="/cours">
-                <Button>Parcourir les cours</Button>
+                <Button>{t.dashboard.browseCourses}</Button>
               </Link>
             </div>
           ) : (
@@ -143,12 +143,8 @@ export default function Dashboard() {
                         </p>
                       </div>
                       <div className="text-right shrink-0">
-                        <span className="text-lg font-bold text-primary">
-                          {pct}%
-                        </span>
-                        <p className="text-xs text-muted-foreground">
-                          {completed}/{total}
-                        </p>
+                        <span className="text-lg font-bold text-primary">{pct}%</span>
+                        <p className="text-xs text-muted-foreground">{completed}/{total}</p>
                       </div>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -167,36 +163,23 @@ export default function Dashboard() {
         {/* Recent activity */}
         {data?.recentActivity && data.recentActivity.length > 0 && (
           <div>
-            <h2 className="text-xl font-bold mb-5">Activité récente</h2>
+            <h2 className="text-xl font-bold mb-5">{t.dashboard.recentTitle}</h2>
             <div className="bg-card border rounded-2xl shadow-sm divide-y">
               {data.recentActivity.map((a, i) => {
                 const course = courses.find((c) => c.id === a.courseId);
-                const chapter = course?.chapters.find(
-                  (ch) => ch.id === a.chapterId,
-                );
-                const date = new Date(a.completedAt).toLocaleDateString(
-                  "fr-HT",
-                  { day: "numeric", month: "short" },
-                );
+                const chapter = course?.chapters.find((ch) => ch.id === a.chapterId);
+                const locale = lang === "ht" ? "fr-HT" : "fr-HT";
+                const date = new Date(a.completedAt).toLocaleDateString(locale, { day: "numeric", month: "short" });
                 return (
-                  <div
-                    key={i}
-                    className="flex items-center gap-4 px-5 py-4 first:rounded-t-2xl last:rounded-b-2xl"
-                  >
+                  <div key={i} className="flex items-center gap-4 px-5 py-4 first:rounded-t-2xl last:rounded-b-2xl">
                     <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-950/30 flex items-center justify-center shrink-0">
                       <BookOpen className="w-4 h-4 text-green-600 dark:text-green-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">
-                        {chapter?.title ?? a.chapterId}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {course?.title ?? a.courseId}
-                      </p>
+                      <p className="font-medium text-sm truncate">{chapter?.title ?? a.chapterId}</p>
+                      <p className="text-xs text-muted-foreground">{course?.title ?? a.courseId}</p>
                     </div>
-                    <span className="text-xs text-muted-foreground shrink-0">
-                      {date}
-                    </span>
+                    <span className="text-xs text-muted-foreground shrink-0">{date}</span>
                   </div>
                 );
               })}
@@ -209,17 +192,9 @@ export default function Dashboard() {
 }
 
 function StatCard({
-  icon,
-  iconBg,
-  label,
-  value,
-  sub,
+  icon, iconBg, label, value, sub,
 }: {
-  icon: React.ReactNode;
-  iconBg: string;
-  label: string;
-  value: string;
-  sub: string;
+  icon: React.ReactNode; iconBg: string; label: string; value: string; sub: string;
 }) {
   return (
     <div className="bg-card border rounded-2xl p-5 shadow-sm">
