@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
 import { useToast } from "@/hooks/use-toast";
+import { api, ApiError } from "@/lib/api";
 
 type Category = "mathematiques" | "sciences" | "francais" | "histoire" | "anglais" | "general";
 
@@ -95,39 +96,23 @@ export default function Forum() {
 
   const postsQuery = useQuery<PostSummary[]>({
     queryKey: ["forum-posts", activeCategory],
-    queryFn: async () => {
-      const url = activeCategory === "all"
+    queryFn: () => {
+      const path = activeCategory === "all"
         ? "/api/forum"
         : `/api/forum?category=${activeCategory}`;
-      const r = await fetch(url);
-      if (!r.ok) throw new Error("err");
-      return r.json();
+      return api.get<PostSummary[]>(path);
     },
   });
 
   const postDetailQuery = useQuery<PostDetail>({
     queryKey: ["forum-post", selectedPostId],
-    queryFn: async () => {
-      const r = await fetch(`/api/forum/${selectedPostId}`);
-      if (!r.ok) throw new Error("err");
-      return r.json();
-    },
+    queryFn: () => api.get<PostDetail>(`/api/forum/${selectedPostId}`),
     enabled: selectedPostId !== null,
   });
 
   const createPostMutation = useMutation({
-    mutationFn: async (data: { title: string; body: string; category: Category }) => {
-      const r = await fetch("/api/forum", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!r.ok) {
-        const err = await r.json();
-        throw new Error(err.error);
-      }
-      return r.json();
-    },
+    mutationFn: (data: { title: string; body: string; category: Category }) => 
+      api.post<PostSummary>("/api/forum", data),
     onSuccess: (post: PostSummary) => {
       qc.invalidateQueries({ queryKey: ["forum-posts"] });
       setShowNewPost(false);
@@ -140,15 +125,8 @@ export default function Forum() {
   });
 
   const replyMutation = useMutation({
-    mutationFn: async (body: string) => {
-      const r = await fetch(`/api/forum/${selectedPostId}/replies`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body }),
-      });
-      if (!r.ok) { const err = await r.json(); throw new Error(err.error); }
-      return r.json();
-    },
+    mutationFn: (body: string) => 
+      api.post<Reply>(`/api/forum/${selectedPostId}/replies`, { body }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["forum-post", selectedPostId] });
       qc.invalidateQueries({ queryKey: ["forum-posts"] });
@@ -158,11 +136,8 @@ export default function Forum() {
   });
 
   const acceptMutation = useMutation({
-    mutationFn: async (replyId: number) => {
-      const r = await fetch(`/api/forum/${selectedPostId}/replies/${replyId}/accept`, { method: "PATCH" });
-      if (!r.ok) { const err = await r.json(); throw new Error(err.error); }
-      return r.json();
-    },
+    mutationFn: (replyId: number) => 
+      api.patch<Reply>(`/api/forum/${selectedPostId}/replies/${replyId}/accept`, {}),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["forum-post", selectedPostId] });
       qc.invalidateQueries({ queryKey: ["forum-posts"] });
@@ -171,11 +146,8 @@ export default function Forum() {
   });
 
   const deletePostMutation = useMutation({
-    mutationFn: async (postId: number) => {
-      const r = await fetch(`/api/forum/${postId}`, { method: "DELETE" });
-      if (!r.ok) { const err = await r.json(); throw new Error(err.error); }
-      return r.json();
-    },
+    mutationFn: (postId: number) => 
+      api.del<{ ok: boolean }>(`/api/forum/${postId}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["forum-posts"] });
       setSelectedPostId(null);
@@ -184,11 +156,8 @@ export default function Forum() {
   });
 
   const deleteReplyMutation = useMutation({
-    mutationFn: async ({ postId, replyId }: { postId: number; replyId: number }) => {
-      const r = await fetch(`/api/forum/${postId}/replies/${replyId}`, { method: "DELETE" });
-      if (!r.ok) { const err = await r.json(); throw new Error(err.error); }
-      return r.json();
-    },
+    mutationFn: ({ postId, replyId }: { postId: number; replyId: number }) => 
+      api.del<{ ok: boolean }>(`/api/forum/${postId}/replies/${replyId}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["forum-post", selectedPostId] });
       qc.invalidateQueries({ queryKey: ["forum-posts"] });
