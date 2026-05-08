@@ -207,8 +207,10 @@ export default function Annales() {
   const subjectColors: Record<string, string> = {
     "Mathématiques": "bg-blue-100 text-blue-800",
     "Sciences Naturelles": "bg-green-100 text-green-800",
+    "Sciences Sociales": "bg-amber-100 text-amber-800",
+    "Sciences Expérimentales": "bg-emerald-100 text-emerald-800",
     "Français": "bg-purple-100 text-purple-800",
-    "Histoire-Géographie": "bg-amber-100 text-amber-800",
+    "Histoire-Géographie": "bg-yellow-100 text-yellow-800",
     "Physique-Chimie": "bg-red-100 text-red-800",
     "Philosophie": "bg-indigo-100 text-indigo-800",
     "Anglais": "bg-teal-100 text-teal-800",
@@ -271,6 +273,11 @@ export default function Annales() {
                   </strong>
                 </p>
               )}
+              {!activeExam.datesConfirmed && (
+                <p className="text-amber-200 text-xs mt-3">
+                  ⚠️ Dates indicatives — à confirmer sur le site officiel du MENFP
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -310,7 +317,14 @@ export default function Annales() {
                 <Clock className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="font-bold">{exam.name}</h3>
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <h3 className="font-bold">{exam.name}</h3>
+                  {!exam.datesConfirmed && (
+                    <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium border border-amber-200">
+                      Date indicative
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground">{exam.description}</p>
                 <p className="text-sm font-semibold text-primary mt-2">
                   📅{" "}
@@ -404,7 +418,7 @@ export default function Annales() {
                 className="bg-card border rounded-2xl p-5 hover:shadow-md transition-all group cursor-pointer"
                 onClick={() => setActivePaper(paper)}
               >
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start justify-between mb-3">
                   <div className="flex flex-wrap gap-2">
                     <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
                       {paper.level}
@@ -414,6 +428,17 @@ export default function Annales() {
                     </span>
                   </div>
                   <span className="text-2xl font-bold text-muted-foreground/40 font-serif">{paper.year}</span>
+                </div>
+                <div className="mb-3">
+                  {paper.source === "MENFP" ? (
+                    <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full font-semibold">
+                      ✓ Épreuve officielle MENFP
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-xs bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full font-medium">
+                      Questions d'entraînement
+                    </span>
+                  )}
                 </div>
                 <h3 className="font-bold text-lg mb-1">{paper.subject}</h3>
                 <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{paper.description}</p>
