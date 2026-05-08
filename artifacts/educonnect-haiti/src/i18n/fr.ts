@@ -15,6 +15,7 @@ export type Translations = {
     home: string; courses: string; flashcards: string; calendar: string;
     orientation: string; opportunities: string; schools: string; centers: string;
     forum: string; teacher: string; dashboard: string; teacherSpace: string; logout: string;
+    annales: string;
   };
   footer: {
     tagline: string; zones: string; resources: string; courseCatalog: string;
@@ -174,6 +175,7 @@ export const fr: Translations = {
     orientation: "Orientation", opportunities: "Opportunités", schools: "Écoles",
     centers: "Centres", forum: "Forum", teacher: "Enseignants",
     dashboard: "Tableau de bord", teacherSpace: "Espace enseignant", logout: "Déconnexion",
+    annales: "Annales",
   },
   footer: {
     tagline: "Donner à chaque jeune haïtien les mêmes chances de réussir grâce à une éducation accessible, moderne et ancrée dans notre réalité.",

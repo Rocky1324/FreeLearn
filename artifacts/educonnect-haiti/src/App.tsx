@@ -26,7 +26,9 @@ import Flashcards from "@/pages/flashcards";
 import CalendarPage from "@/pages/calendar";
 import Dashboard from "@/pages/dashboard";
 import Forum from "@/pages/forum";
+import Annales from "@/pages/annales";
 import NotFound from "@/pages/not-found";
+import { PwaInstallBanner } from "@/components/PwaInstallBanner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,6 +63,7 @@ function Router() {
       <Route path="/fiches/:courseId">{() => <P><Flashcards /></P>}</Route>
       <Route path="/calendrier">{() => <P><CalendarPage /></P>}</Route>
       <Route path="/forum">{() => <P><Forum /></P>}</Route>
+      <Route path="/annales">{() => <P><Annales /></P>}</Route>
 
       <Route component={NotFound} />
     </Switch>
@@ -77,6 +80,7 @@ function App() {
               <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
                 <Router />
               </WouterRouter>
+              <PwaInstallBanner />
               <Toaster />
             </TooltipProvider>
           </AuthProvider>

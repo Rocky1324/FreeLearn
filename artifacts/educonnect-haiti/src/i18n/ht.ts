@@ -7,6 +7,7 @@ export const ht: Translations = {
     orientation: "Oryantasyon", opportunities: "Opòtinite", schools: "Lekòl",
     centers: "Sant", forum: "Fowòm", teacher: "Pwofesè",
     dashboard: "Tablo debò", teacherSpace: "Espas pwofesè", logout: "Dekonekte",
+    annales: "Annal",
   },
   footer: {
     tagline: "Bay chak jèn ayisyen menm chans pou reyisi grasa yon edikasyon aksesib, modèn epi anrasinen nan reyalite nou.",

@@ -36,6 +36,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/fiches", label: t.nav.flashcards },
     { href: "/calendrier", label: t.nav.calendar },
     { href: "/forum", label: t.nav.forum },
+    { href: "/annales", label: t.nav.annales },
     { href: "/orientation", label: t.nav.orientation },
     { href: "/opportunites", label: t.nav.opportunities },
     { href: "/ecoles", label: t.nav.schools },
@@ -264,6 +265,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <li><Link href="/cours">{t.footer.courseCatalog}</Link></li>
               <li className="flex items-center gap-1.5"><Layers className="h-3.5 w-3.5" /><Link href="/fiches">{t.footer.flashcards}</Link></li>
               <li className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /><Link href="/calendrier">{t.footer.studyCalendar}</Link></li>
+              <li><Link href="/annales">{t.nav.annales}</Link></li>
               <li><Link href="/opportunites">{t.footer.opportunities}</Link></li>
               <li className="flex items-center gap-1.5"><MessageSquare className="h-3.5 w-3.5" /><Link href="/forum">{t.nav.forum}</Link></li>
               <li className="flex items-center gap-1.5"><LayoutDashboard className="h-3.5 w-3.5" /><Link href="/tableau-de-bord">{t.nav.dashboard}</Link></li>
