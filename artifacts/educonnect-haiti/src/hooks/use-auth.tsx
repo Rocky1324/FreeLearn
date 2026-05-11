@@ -30,14 +30,24 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  // On initialise avec l'utilisateur stocké localement s'il existe
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    const saved = localStorage.getItem("educonnect_user");
+    return saved ? JSON.parse(saved) : null;
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api
       .get<AuthUser>("/api/auth/me")
-      .then(setUser)
-      .catch(() => setUser(null))
+      .then((userData) => {
+        setUser(userData);
+        localStorage.setItem("educonnect_user", JSON.stringify(userData));
+      })
+      .catch(() => {
+        // En cas d'erreur (ex: hors ligne), on garde l'utilisateur local s'il existe
+        // On ne le supprime que si le serveur confirme explicitement (401)
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -47,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
     });
     setUser(data.user);
+    localStorage.setItem("educonnect_user", JSON.stringify(data.user));
   };
 
   const register = async (
@@ -62,11 +73,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       teacherCode,
     });
     setUser(data.user);
+    localStorage.setItem("educonnect_user", JSON.stringify(data.user));
   };
 
   const logout = async () => {
     await api.post("/api/auth/logout", {}).catch(() => {});
     setUser(null);
+    localStorage.removeItem("educonnect_user");
   };
 
   return (

@@ -3,11 +3,7 @@ const MEDIA_CACHE = "freelearn-media-v1";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(APP_CACHE).then((cache) =>
-      cache.add("./").catch(() => {})
-    )
-  );
+  event.waitUntil(caches.open(APP_CACHE));
 });
 
 self.addEventListener("activate", (event) => {
@@ -41,7 +37,7 @@ self.addEventListener("message", (event) => {
               .then((res) => {
                 if (res.ok) cache.put(url, res);
               })
-              .catch(() => {})
+              .catch(() => { })
           )
         );
       })
@@ -75,43 +71,31 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
-
-  if (url.pathname.startsWith("/api/")) return;
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(
     (async () => {
+      // 1. Chercher dans le cache Média (vidéos/images de cours)
       const mediaCache = await caches.open(MEDIA_CACHE);
       const cachedMedia = await mediaCache.match(req);
       if (cachedMedia) return cachedMedia;
 
+      // 2. Chercher dans le cache App (scripts/styles/html)
       const appCache = await caches.open(APP_CACHE);
-
-      if (req.mode === "navigate") {
-        try {
-          const fresh = await fetch(req);
-          appCache.put(req, fresh.clone()).catch(() => {});
-          return fresh;
-        } catch {
-          const cached = await appCache.match(req);
-          if (cached) return cached;
-          const shell = await appCache.match("./");
-          if (shell) return shell;
-          throw new Error("Offline — no cached shell");
-        }
-      }
-
-      const cachedAsset = await appCache.match(req);
-      if (cachedAsset) return cachedAsset;
-
       try {
         const fresh = await fetch(req);
-        if (fresh && fresh.ok && fresh.type === "basic") {
-          appCache.put(req, fresh.clone()).catch(() => {});
+        if (fresh && fresh.ok) {
+          appCache.put(req, fresh.clone()).catch(() => { });
         }
         return fresh;
-      } catch {
-        throw new Error("Offline: resource not cached");
+      } catch (err) {
+        const cached = await appCache.match(req);
+        if (cached) return cached;
+        if (req.mode === "navigate") {
+          const fallback = await appCache.match("./");
+          if (fallback) return fallback;
+        }
+        throw err;
       }
     })()
   );
