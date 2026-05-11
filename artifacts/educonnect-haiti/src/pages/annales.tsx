@@ -15,6 +15,9 @@ import {
   ExternalLink,
   FileText,
   Layers,
+  DownloadCloud,
+  CheckCircle,
+  Loader2,
 } from "lucide-react";
 import {
   examPapers,
@@ -223,6 +226,60 @@ const subjectIcon: Record<string, string> = {
   "Économie": "📊",
 };
 
+function OfflineDownload({ url, title }: { url: string; title: string }) {
+  const [status, setStatus] = useState<"idle" | "loading" | "cached">("idle");
+  const proxyUrl = `/api/proxy-pdf?url=${encodeURIComponent(url)}`;
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+      const handler = (event: MessageEvent) => {
+        if (event.data.type === "CACHED_STATUS" && event.data.url === proxyUrl) {
+          setStatus(event.data.cached ? "cached" : "idle");
+        }
+      };
+      navigator.serviceWorker.addEventListener("message", handler);
+      navigator.serviceWorker.controller.postMessage({ type: "CHECK_CACHED", url: proxyUrl });
+      return () => navigator.serviceWorker.removeEventListener("message", handler);
+    }
+  }, [proxyUrl]);
+
+  const handleDownload = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (status === "cached") return;
+
+    setStatus("loading");
+    if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: "CACHE_MEDIA",
+        urls: [proxyUrl]
+      });
+      // On simule une fin de chargement (le SW confirmera via message)
+      setTimeout(() => setStatus("cached"), 2000);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleDownload}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+        status === "cached"
+          ? "bg-green-100 text-green-700"
+          : "bg-primary/10 text-primary hover:bg-primary/20"
+      }`}
+    >
+      {status === "loading" ? (
+        <Loader2 className="w-3 h-3 animate-spin" />
+      ) : status === "cached" ? (
+        <CheckCircle className="w-3 h-3" />
+      ) : (
+        <DownloadCloud className="w-3 h-3" />
+      )}
+      {status === "loading" ? "Calcul..." : status === "cached" ? "Dispo Hors-ligne" : "Sauvegarder"}
+    </button>
+  );
+}
+
 function ResourcesTab() {
   const [activeLevel, setActiveLevel] = useState<ExamLevel>("9ème AF");
   const [activeSubject, setActiveSubject] = useState<string>("Tous");
@@ -322,11 +379,8 @@ function ResourcesTab() {
                   {items.map((res) => {
                     const cfg = resourceTypeConfig[res.type];
                     return (
-                      <a
+                      <div
                         key={res.id}
-                        href={res.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
                         className="group bg-card border rounded-2xl p-5 hover:shadow-md hover:border-primary/30 transition-all flex flex-col gap-3"
                       >
                         <div className="flex items-start justify-between gap-2">
@@ -339,14 +393,23 @@ function ResourcesTab() {
                             </span>
                           )}
                         </div>
-                        <p className="font-semibold text-sm leading-snug group-hover:text-primary transition-colors">
+                        <p className="font-semibold text-sm leading-snug">
                           {res.title}
                         </p>
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-auto pt-1">
-                          <ExternalLink className="w-3.5 h-3.5 group-hover:text-primary transition-colors" />
-                          <span className="group-hover:text-primary transition-colors">Ouvrir sur examhaiti.com</span>
+                        
+                        <div className="flex flex-wrap gap-2 mt-auto pt-2">
+                          <a 
+                            href={`/api/proxy-pdf?url=${encodeURIComponent(res.url)}`}
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            Lire le PDF
+                          </a>
+                          <OfflineDownload url={res.url} title={res.title} />
                         </div>
-                      </a>
+                      </div>
                     );
                   })}
                 </div>
