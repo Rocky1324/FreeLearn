@@ -20,7 +20,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
-import { offlineDB, type OfflineResource } from "@/lib/offline-db";
+import { offlineDB } from "@/lib/offline-db";
 import {
   examPapers,
   examResources,

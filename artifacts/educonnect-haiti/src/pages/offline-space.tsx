@@ -132,7 +132,7 @@ export default function OfflineSpace() {
                       Enregistré le {new Date(res.savedAt).toLocaleDateString()}
                     </span>
                     <a 
-                      href={`/view-pdf?url=${encodeURIComponent(res.url)}`}
+                      href={`/api/proxy-pdf?url=${encodeURIComponent(res.url)}`}
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
