@@ -71,14 +71,17 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;
 
   event.respondWith(
     (async () => {
-      // 1. Chercher dans le cache Média (vidéos/images de cours)
+      // 1. Chercher d'abord dans le cache Média (PDFs, images)
+      // On le fait AVANT de vérifier l'origine pour permettre le offline cross-domain
       const mediaCache = await caches.open(MEDIA_CACHE);
       const cachedMedia = await mediaCache.match(req);
       if (cachedMedia) return cachedMedia;
+
+      // Si ce n'est pas dans le cache média et que ça vient d'ailleurs (ex: Google Fonts), on laisse passer sans gérer
+      if (url.origin !== self.location.origin) return fetch(req);
 
       // 2. Chercher dans le cache App (scripts/styles/html)
       const appCache = await caches.open(APP_CACHE);

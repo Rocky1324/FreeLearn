@@ -19,6 +19,7 @@ import {
   CheckCircle,
   Loader2,
 } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 import {
   examPapers,
   examResources,
@@ -228,7 +229,7 @@ const subjectIcon: Record<string, string> = {
 
 function OfflineDownload({ url, title }: { url: string; title: string }) {
   const [status, setStatus] = useState<"idle" | "loading" | "cached">("idle");
-  const proxyUrl = `/api/proxy-pdf?url=${encodeURIComponent(url)}`;
+  const proxyUrl = `${API_BASE_URL}/api/proxy-pdf?url=${encodeURIComponent(url)}`;
 
   useEffect(() => {
     if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
@@ -399,7 +400,7 @@ function ResourcesTab() {
                         
                         <div className="flex flex-wrap gap-2 mt-auto pt-2">
                           <a 
-                            href={`/api/proxy-pdf?url=${encodeURIComponent(res.url)}`}
+                            href={`${API_BASE_URL}/api/proxy-pdf?url=${encodeURIComponent(res.url)}`}
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
