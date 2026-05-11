@@ -415,7 +415,7 @@ function ResourcesTab() {
                         
                         <div className="flex flex-wrap gap-2 mt-auto pt-2">
                           <a 
-                            href={`/view-pdf?url=${encodeURIComponent(res.url)}`}
+                            href={`${API_BASE_URL}/api/proxy-pdf?url=${encodeURIComponent(res.url)}`}
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"

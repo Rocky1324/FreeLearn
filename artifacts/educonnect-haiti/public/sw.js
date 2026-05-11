@@ -1,6 +1,6 @@
-const APP_CACHE = "freelearn-app-v2";
-const MEDIA_CACHE = "freelearn-media-v1";
-const API_BASE_URL = "https://educonnect-api-07ao.onrender.com";
+const APP_CACHE = "freelearn-app-v3";
+const MEDIA_CACHE = "freelearn-media-v2";
+const API_BASE_URL = self.location.origin;
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
