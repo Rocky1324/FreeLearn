@@ -1,5 +1,6 @@
 const APP_CACHE = "freelearn-app-v2";
 const MEDIA_CACHE = "freelearn-media-v1";
+const API_BASE_URL = "https://educonnect-api-07ao.onrender.com";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -86,13 +87,29 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     (async () => {
-      // 1. Chercher d'abord dans le cache Média (PDFs, images)
-      // On le fait AVANT de vérifier l'origine pour permettre le offline cross-domain
+      // 1. Interception spéciale pour la lecture des PDF sauvegardés
+      if (url.pathname.startsWith("/view-pdf")) {
+        const targetUrl = url.searchParams.get("url");
+        const proxyUrl = `${API_BASE_URL}/api/proxy-pdf?url=${encodeURIComponent(targetUrl || "")}`;
+        
+        const mediaCache = await caches.open(MEDIA_CACHE);
+        const cachedResponse = await mediaCache.match(proxyUrl);
+        
+        if (cachedResponse) {
+          console.log("SW: Lecture du PDF depuis le cache");
+          return cachedResponse;
+        }
+        
+        // Si pas en cache, on redirige vers le vrai proxy (nécessite internet)
+        console.log("SW: PDF non trouvé en cache, redirection vers l'API");
+        return fetch(proxyUrl);
+      }
+
+      // 2. Chercher d'abord dans le cache Média (Images, etc.)
       const mediaCache = await caches.open(MEDIA_CACHE);
       const cachedMedia = await mediaCache.match(req);
       if (cachedMedia) return cachedMedia;
 
-      // Si ce n'est pas dans le cache média et que ça vient d'ailleurs (ex: Google Fonts), on laisse passer sans gérer
       if (url.origin !== self.location.origin) return fetch(req);
 
       // 2. Chercher dans le cache App (scripts/styles/html)
