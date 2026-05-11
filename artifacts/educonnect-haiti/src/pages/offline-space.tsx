@@ -11,6 +11,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { offlineDB, type OfflineResource } from "@/lib/offline-db";
+import { API_BASE_URL } from "@/lib/api";
 import { Link } from "wouter";
 
 export default function OfflineSpace() {
@@ -132,7 +133,7 @@ export default function OfflineSpace() {
                       Enregistré le {new Date(res.savedAt).toLocaleDateString()}
                     </span>
                     <a 
-                      href={`/api/proxy-pdf?url=${encodeURIComponent(res.url)}`}
+                      href={`${API_BASE_URL}/api/proxy-pdf?url=${encodeURIComponent(res.url)}`}
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"

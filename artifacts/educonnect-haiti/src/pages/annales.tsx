@@ -230,7 +230,7 @@ const subjectIcon: Record<string, string> = {
 
 function OfflineDownload({ res }: { res: ExamResource }) {
   const [status, setStatus] = useState<"idle" | "loading" | "cached">("idle");
-  const proxyUrl = `${window.location.origin}/api/proxy-pdf?url=${encodeURIComponent(res.url)}`;
+  const proxyUrl = `${API_BASE_URL}/api/proxy-pdf?url=${encodeURIComponent(res.url)}`;
 
   useEffect(() => {
     const checkStatus = () => {
