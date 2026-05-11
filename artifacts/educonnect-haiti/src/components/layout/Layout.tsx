@@ -41,6 +41,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/opportunites", label: t.nav.opportunities },
     { href: "/ecoles", label: t.nav.schools },
     { href: "/centres", label: t.nav.centers },
+    { href: "/espace-hors-ligne", label: t.nav.offlineSpace },
     ...(user?.role === "teacher" ? [{ href: "/admin", label: t.nav.teacher }] : []),
   ];
 

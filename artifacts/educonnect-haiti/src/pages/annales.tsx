@@ -20,6 +20,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
+import { offlineDB, type OfflineResource } from "@/lib/offline-db";
 import {
   examPapers,
   examResources,
@@ -227,9 +228,9 @@ const subjectIcon: Record<string, string> = {
   "Économie": "📊",
 };
 
-function OfflineDownload({ url, title }: { url: string; title: string }) {
+function OfflineDownload({ res }: { res: ExamResource }) {
   const [status, setStatus] = useState<"idle" | "loading" | "cached">("idle");
-  const proxyUrl = `${API_BASE_URL}/api/proxy-pdf?url=${encodeURIComponent(url)}`;
+  const proxyUrl = `${API_BASE_URL}/api/proxy-pdf?url=${encodeURIComponent(res.url)}`;
 
   useEffect(() => {
     const checkStatus = () => {
@@ -264,8 +265,20 @@ function OfflineDownload({ url, title }: { url: string; title: string }) {
 
     setStatus("loading");
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.ready.then((registration) => {
+      navigator.serviceWorker.ready.then(async (registration) => {
         if (registration.active) {
+          // Sauvegarde dans la DB locale d'abord
+          await offlineDB.saveResource({
+            id: res.id,
+            url: res.url,
+            proxyUrl: proxyUrl,
+            title: res.title,
+            subject: res.subject,
+            level: res.level,
+            type: res.type,
+            savedAt: Date.now(),
+          });
+
           registration.active.postMessage({
             type: "CACHE_MEDIA",
             urls: [proxyUrl]
@@ -423,7 +436,7 @@ function ResourcesTab() {
                             <ExternalLink className="w-3.5 h-3.5" />
                             Lire le PDF
                           </a>
-                          <OfflineDownload url={res.url} title={res.title} />
+                          <OfflineDownload res={res} />
                         </div>
                       </div>
                     );

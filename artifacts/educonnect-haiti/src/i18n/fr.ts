@@ -176,6 +176,7 @@ export const fr: Translations = {
     centers: "Centres", forum: "Forum", teacher: "Enseignants",
     dashboard: "Tableau de bord", teacherSpace: "Espace enseignant", logout: "Déconnexion",
     annales: "Annales",
+    offlineSpace: "Espace Hors-Ligne",
   },
   footer: {
     tagline: "Donner à chaque jeune haïtien les mêmes chances de réussir grâce à une éducation accessible, moderne et ancrée dans notre réalité.",

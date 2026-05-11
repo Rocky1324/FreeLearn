@@ -27,6 +27,7 @@ import CalendarPage from "@/pages/calendar";
 import Dashboard from "@/pages/dashboard";
 import Forum from "@/pages/forum";
 import Annales from "@/pages/annales";
+import OfflineSpace from "@/pages/offline-space";
 import NotFound from "@/pages/not-found";
 import { PwaInstallBanner } from "@/components/PwaInstallBanner";
 
@@ -64,6 +65,7 @@ function Router() {
       <Route path="/calendrier">{() => <P><CalendarPage /></P>}</Route>
       <Route path="/forum">{() => <P><Forum /></P>}</Route>
       <Route path="/annales">{() => <P><Annales /></P>}</Route>
+      <Route path="/espace-hors-ligne">{() => <P><OfflineSpace /></P>}</Route>
 
       <Route component={NotFound} />
     </Switch>
