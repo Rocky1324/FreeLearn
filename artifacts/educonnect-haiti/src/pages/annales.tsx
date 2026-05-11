@@ -232,15 +232,28 @@ function OfflineDownload({ url, title }: { url: string; title: string }) {
   const proxyUrl = `${API_BASE_URL}/api/proxy-pdf?url=${encodeURIComponent(url)}`;
 
   useEffect(() => {
-    if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+    const checkStatus = () => {
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: "CHECK_CACHED", url: proxyUrl });
+      }
+    };
+
+    if ("serviceWorker" in navigator) {
       const handler = (event: MessageEvent) => {
         if (event.data.type === "CACHED_STATUS" && event.data.url === proxyUrl) {
           setStatus(event.data.cached ? "cached" : "idle");
         }
       };
       navigator.serviceWorker.addEventListener("message", handler);
-      navigator.serviceWorker.controller.postMessage({ type: "CHECK_CACHED", url: proxyUrl });
-      return () => navigator.serviceWorker.removeEventListener("message", handler);
+      
+      // On vérifie maintenant, et aussi quand le SW change
+      checkStatus();
+      navigator.serviceWorker.addEventListener("controllerchange", checkStatus);
+      
+      return () => {
+        navigator.serviceWorker.removeEventListener("message", handler);
+        navigator.serviceWorker.removeEventListener("controllerchange", checkStatus);
+      };
     }
   }, [proxyUrl]);
 
@@ -250,10 +263,14 @@ function OfflineDownload({ url, title }: { url: string; title: string }) {
     if (status === "cached") return;
 
     setStatus("loading");
-    if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({
-        type: "CACHE_MEDIA",
-        urls: [proxyUrl]
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.ready.then((registration) => {
+        if (registration.active) {
+          registration.active.postMessage({
+            type: "CACHE_MEDIA",
+            urls: [proxyUrl]
+          });
+        }
       });
     }
   };

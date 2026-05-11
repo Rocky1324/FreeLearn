@@ -29,18 +29,23 @@ self.addEventListener("message", (event) => {
   }
 
   if (data.type === "CACHE_MEDIA" && Array.isArray(data.urls)) {
+    console.log("SW: Début de mise en cache pour", data.urls);
     event.waitUntil(
       caches.open(MEDIA_CACHE).then((cache) => {
         return Promise.all(
           data.urls.map((url) =>
             fetch(url)
               .then((res) => {
-                if (res.ok) return cache.put(url, res);
+                if (res.ok) {
+                  console.log("SW: Fichier récupéré avec succès:", url);
+                  return cache.put(url, res);
+                }
+                console.error("SW: Erreur fetch (pas OK):", url, res.status);
               })
-              .catch(() => { })
+              .catch((err) => { console.error("SW: Erreur réseau fetch:", url, err); })
           )
         ).then(() => {
-          // Une fois fini, on prévient l'interface
+          console.log("SW: Mise en cache terminée pour tous les fichiers");
           if (event.source) {
             data.urls.forEach(url => {
               event.source.postMessage({ type: "CACHED_STATUS", url, cached: true });
