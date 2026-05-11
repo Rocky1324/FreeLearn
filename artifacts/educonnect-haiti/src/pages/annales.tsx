@@ -12,13 +12,18 @@ import {
   RotateCcw,
   Filter,
   Calendar,
+  ExternalLink,
+  FileText,
+  Layers,
 } from "lucide-react";
 import {
   examPapers,
+  examResources,
   upcomingExams,
   type ExamPaper,
   type ExamLevel,
   type ExamSubject,
+  type ExamResource,
 } from "@/data/annales";
 
 function useCountdown(target: Date) {
@@ -186,11 +191,184 @@ function ExamQuiz({ paper, onClose }: { paper: ExamPaper; onClose: () => void })
   );
 }
 
+const resourceTypeConfig: Record<ExamResource["type"], { label: string; className: string }> = {
+  "Épreuve officielle": {
+    label: "✓ Épreuve officielle MENFP",
+    className: "bg-green-50 text-green-700 border-green-200",
+  },
+  "Modèle": {
+    label: "◈ Sujet Modèle",
+    className: "bg-blue-50 text-blue-700 border-blue-200",
+  },
+  "Collection": {
+    label: "⊞ Collection d'années",
+    className: "bg-amber-50 text-amber-700 border-amber-200",
+  },
+};
+
+const subjectIcon: Record<string, string> = {
+  "Mathématiques": "📐",
+  "Français": "📖",
+  "Sciences Sociales": "🌍",
+  "Sciences Expérimentales": "🔬",
+  "Anglais": "🇬🇧",
+  "Créole": "🇭🇹",
+  "Espagnol": "🌎",
+  "Physique": "⚡",
+  "Chimie": "🧪",
+  "Philosophie": "🏛️",
+  "SVT / Biologie": "🌿",
+  "Histoire-Géographie": "🗺️",
+  "Informatique": "💻",
+  "Économie": "📊",
+};
+
+function ResourcesTab() {
+  const [activeLevel, setActiveLevel] = useState<ExamLevel>("9ème AF");
+  const [activeSubject, setActiveSubject] = useState<string>("Tous");
+
+  const filtered = examResources.filter((r) => r.level === activeLevel);
+  const subjects = Array.from(new Set(filtered.map((r) => r.subject)));
+  const displayed =
+    activeSubject === "Tous"
+      ? filtered
+      : filtered.filter((r) => r.subject === activeSubject);
+
+  const grouped = subjects.reduce<Record<string, ExamResource[]>>((acc, sub) => {
+    acc[sub] = displayed.filter((r) => r.subject === sub);
+    return acc;
+  }, {});
+
+  return (
+    <div>
+      {/* Source credit */}
+      <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-8 text-sm">
+        <ExternalLink className="w-4 h-4 text-blue-600 shrink-0" />
+        <p className="text-blue-800">
+          Ressources issues de{" "}
+          <a
+            href="https://www.examhaiti.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold underline hover:text-blue-900"
+          >
+            examhaiti.com
+          </a>
+          . Chaque sujet s'ouvre dans un nouvel onglet sur le site source.
+        </p>
+      </div>
+
+      {/* Level tabs */}
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {(["9ème AF", "NS4"] as ExamLevel[]).map((lv) => (
+          <button
+            key={lv}
+            onClick={() => { setActiveLevel(lv); setActiveSubject("Tous"); }}
+            className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all ${
+              activeLevel === lv
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            {lv === "9ème AF" ? "9ème Année Fondamentale" : "Baccalauréat (NS4)"}
+          </button>
+        ))}
+      </div>
+
+      {/* Subject filter pills */}
+      <div className="flex flex-wrap gap-2 mb-8">
+        <button
+          onClick={() => setActiveSubject("Tous")}
+          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+            activeSubject === "Tous"
+              ? "bg-secondary text-secondary-foreground border-secondary"
+              : "bg-card border-border text-muted-foreground hover:border-secondary/50"
+          }`}
+        >
+          Toutes les matières
+        </button>
+        {subjects.map((sub) => (
+          <button
+            key={sub}
+            onClick={() => setActiveSubject(sub)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+              activeSubject === sub
+                ? "bg-secondary text-secondary-foreground border-secondary"
+                : "bg-card border-border text-muted-foreground hover:border-secondary/50"
+            }`}
+          >
+            {subjectIcon[sub] ?? "📄"} {sub}
+          </button>
+        ))}
+      </div>
+
+      {/* Resources grouped by subject */}
+      <div className="space-y-8">
+        {subjects
+          .filter((sub) => activeSubject === "Tous" || sub === activeSubject)
+          .map((sub) => {
+            const items = grouped[sub] ?? [];
+            if (items.length === 0) return null;
+            return (
+              <div key={sub}>
+                <h3 className="flex items-center gap-2 text-lg font-bold font-serif mb-4">
+                  <span className="text-2xl">{subjectIcon[sub] ?? "📄"}</span>
+                  {sub}
+                  <span className="text-sm font-normal text-muted-foreground ml-1">
+                    ({items.length} sujet{items.length > 1 ? "s" : ""})
+                  </span>
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {items.map((res) => {
+                    const cfg = resourceTypeConfig[res.type];
+                    return (
+                      <a
+                        key={res.id}
+                        href={res.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group bg-card border rounded-2xl p-5 hover:shadow-md hover:border-primary/30 transition-all flex flex-col gap-3"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <span className={`inline-flex items-center gap-1 text-xs font-semibold border px-2.5 py-1 rounded-full ${cfg.className}`}>
+                            {cfg.label}
+                          </span>
+                          {res.years && (
+                            <span className="text-xs font-bold text-muted-foreground/60 font-mono shrink-0">
+                              {res.years}
+                            </span>
+                          )}
+                        </div>
+                        <p className="font-semibold text-sm leading-snug group-hover:text-primary transition-colors">
+                          {res.title}
+                        </p>
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-auto pt-1">
+                          <ExternalLink className="w-3.5 h-3.5 group-hover:text-primary transition-colors" />
+                          <span className="group-hover:text-primary transition-colors">Ouvrir sur examhaiti.com</span>
+                        </div>
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+      </div>
+
+      {/* Count summary */}
+      <p className="text-center text-sm text-muted-foreground mt-10">
+        {displayed.length} sujet{displayed.length > 1 ? "s" : ""} disponible{displayed.length > 1 ? "s" : ""} pour {activeLevel === "9ème AF" ? "la 9ème AF" : "le Bac NS4"}
+      </p>
+    </div>
+  );
+}
+
 export default function Annales() {
   const [selectedLevel, setSelectedLevel] = useState<ExamLevel | "Tous">("Tous");
   const [selectedSubject, setSelectedSubject] = useState<ExamSubject | "Tous">("Tous");
   const [activePaper, setActivePaper] = useState<ExamPaper | null>(null);
   const [activeExamIdx, setActiveExamIdx] = useState(0);
+  const [mainTab, setMainTab] = useState<"quiz" | "epreuves">("quiz");
 
   const activeExam = upcomingExams[activeExamIdx];
   const countdown = useCountdown(activeExam.date);
@@ -340,120 +518,155 @@ export default function Annales() {
           ))}
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-8 items-start sm:items-center">
-          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground shrink-0">
-            <Filter className="w-4 h-4" /> Filtrer :
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setSelectedLevel("Tous")}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                selectedLevel === "Tous"
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-card border-border text-muted-foreground hover:border-primary/50"
-              }`}
-            >
-              Tous les niveaux
-            </button>
-            {levels.map((lv) => (
-              <button
-                key={lv}
-                onClick={() => setSelectedLevel(lv)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                  selectedLevel === lv
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-card border-border text-muted-foreground hover:border-primary/50"
-                }`}
-              >
-                {lv}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setSelectedSubject("Tous")}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                selectedSubject === "Tous"
-                  ? "bg-secondary text-secondary-foreground border-secondary"
-                  : "bg-card border-border text-muted-foreground hover:border-secondary/50"
-              }`}
-            >
-              Toutes les matières
-            </button>
-            {subjects.map((sub) => (
-              <button
-                key={sub}
-                onClick={() => setSelectedSubject(sub)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                  selectedSubject === sub
-                    ? "bg-secondary text-secondary-foreground border-secondary"
-                    : "bg-card border-border text-muted-foreground hover:border-secondary/50"
-                }`}
-              >
-                {sub}
-              </button>
-            ))}
-          </div>
+        {/* Main tabs */}
+        <div className="flex gap-1 p-1 bg-muted rounded-2xl mb-10 w-full max-w-md">
+          <button
+            onClick={() => setMainTab("quiz")}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              mainTab === "quiz"
+                ? "bg-card shadow-sm text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            Quiz & Entraînement
+          </button>
+          <button
+            onClick={() => setMainTab("epreuves")}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              mainTab === "epreuves"
+                ? "bg-card shadow-sm text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            Épreuves Complètes
+            <span className="bg-primary text-primary-foreground text-xs rounded-full px-1.5 py-0.5 leading-none">
+              {examResources.length}
+            </span>
+          </button>
         </div>
 
-        {/* Papers grid */}
-        <h2 className="text-2xl font-bold font-serif mb-6">
-          {filtered.length} sujet{filtered.length > 1 ? "s" : ""} disponible{filtered.length > 1 ? "s" : ""}
-        </h2>
-
-        {filtered.length === 0 ? (
-          <div className="text-center py-20 text-muted-foreground">
-            <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-30" />
-            <p className="font-medium">Aucun sujet ne correspond à ces filtres.</p>
-            <Button variant="ghost" onClick={() => { setSelectedLevel("Tous"); setSelectedSubject("Tous"); }} className="mt-4">
-              Réinitialiser les filtres
-            </Button>
-          </div>
+        {mainTab === "epreuves" ? (
+          <ResourcesTab />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filtered.map((paper) => (
-              <div
-                key={paper.id}
-                className="bg-card border rounded-2xl p-5 hover:shadow-md transition-all group cursor-pointer"
-                onClick={() => setActivePaper(paper)}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
-                      {paper.level}
-                    </span>
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${subjectColors[paper.subject] || "bg-muted text-muted-foreground"}`}>
-                      {paper.subject}
-                    </span>
-                  </div>
-                  <span className="text-2xl font-bold text-muted-foreground/40 font-serif">{paper.year}</span>
-                </div>
-                <div className="mb-3">
-                  {paper.source === "MENFP" ? (
-                    <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full font-semibold">
-                      ✓ Épreuve officielle MENFP
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-xs bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full font-medium">
-                      Questions d'entraînement
-                    </span>
-                  )}
-                </div>
-                <h3 className="font-bold text-lg mb-1">{paper.subject}</h3>
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{paper.description}</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <CheckCircle2 className="w-4 h-4" />
-                    {paper.questions.length} questions
-                  </div>
-                  <Button size="sm" variant="outline" className="group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                    S'entraîner
-                  </Button>
-                </div>
+          <>
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-8 items-start sm:items-center">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground shrink-0">
+                <Filter className="w-4 h-4" /> Filtrer :
               </div>
-            ))}
-          </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setSelectedLevel("Tous")}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                    selectedLevel === "Tous"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card border-border text-muted-foreground hover:border-primary/50"
+                  }`}
+                >
+                  Tous les niveaux
+                </button>
+                {levels.map((lv) => (
+                  <button
+                    key={lv}
+                    onClick={() => setSelectedLevel(lv)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                      selectedLevel === lv
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-card border-border text-muted-foreground hover:border-primary/50"
+                    }`}
+                  >
+                    {lv}
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setSelectedSubject("Tous")}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                    selectedSubject === "Tous"
+                      ? "bg-secondary text-secondary-foreground border-secondary"
+                      : "bg-card border-border text-muted-foreground hover:border-secondary/50"
+                  }`}
+                >
+                  Toutes les matières
+                </button>
+                {subjects.map((sub) => (
+                  <button
+                    key={sub}
+                    onClick={() => setSelectedSubject(sub)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                      selectedSubject === sub
+                        ? "bg-secondary text-secondary-foreground border-secondary"
+                        : "bg-card border-border text-muted-foreground hover:border-secondary/50"
+                    }`}
+                  >
+                    {sub}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Papers grid */}
+            <h2 className="text-2xl font-bold font-serif mb-6">
+              {filtered.length} sujet{filtered.length > 1 ? "s" : ""} disponible{filtered.length > 1 ? "s" : ""}
+            </h2>
+
+            {filtered.length === 0 ? (
+              <div className="text-center py-20 text-muted-foreground">
+                <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                <p className="font-medium">Aucun sujet ne correspond à ces filtres.</p>
+                <Button variant="ghost" onClick={() => { setSelectedLevel("Tous"); setSelectedSubject("Tous"); }} className="mt-4">
+                  Réinitialiser les filtres
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filtered.map((paper) => (
+                  <div
+                    key={paper.id}
+                    className="bg-card border rounded-2xl p-5 hover:shadow-md transition-all group cursor-pointer"
+                    onClick={() => setActivePaper(paper)}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex flex-wrap gap-2">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
+                          {paper.level}
+                        </span>
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${subjectColors[paper.subject] || "bg-muted text-muted-foreground"}`}>
+                          {paper.subject}
+                        </span>
+                      </div>
+                      <span className="text-2xl font-bold text-muted-foreground/40 font-serif">{paper.year}</span>
+                    </div>
+                    <div className="mb-3">
+                      {paper.source === "MENFP" ? (
+                        <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full font-semibold">
+                          ✓ Épreuve officielle MENFP
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full font-medium">
+                          Questions d'entraînement
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-bold text-lg mb-1">{paper.subject}</h3>
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{paper.description}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <CheckCircle2 className="w-4 h-4" />
+                        {paper.questions.length} questions
+                      </div>
+                      <Button size="sm" variant="outline" className="group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                        S'entraîner
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {/* Tips section */}
