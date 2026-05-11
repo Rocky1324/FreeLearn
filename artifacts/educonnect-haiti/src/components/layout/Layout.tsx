@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import {
   BookOpen,
@@ -15,6 +15,7 @@ import {
   ChevronDown,
   GraduationCap,
   MessageSquare,
+  ChevronRight,
 } from "lucide-react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useTheme } from "@/hooks/use-theme";
@@ -24,19 +25,34 @@ import { useLanguage } from "@/hooks/use-language";
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [lowConnexion, setLowConnexion] = useLocalStorage("connexion-faible", false);
   const [location] = useLocation();
   const { theme, toggle: toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const { t, toggle: toggleLang } = useLanguage();
+  const moreMenuRef = useRef<HTMLDivElement>(null);
 
-  const navLinks = [
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setMoreMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const primaryLinks = [
     { href: "/", label: t.nav.home },
     { href: "/cours", label: t.nav.courses },
     { href: "/fiches", label: t.nav.flashcards },
-    { href: "/calendrier", label: t.nav.calendar },
-    { href: "/forum", label: t.nav.forum },
     { href: "/annales", label: t.nav.annales },
+    { href: "/forum", label: t.nav.forum },
+  ];
+
+  const secondaryLinks = [
+    { href: "/calendrier", label: t.nav.calendar },
     { href: "/orientation", label: t.nav.orientation },
     { href: "/opportunites", label: t.nav.opportunities },
     { href: "/ecoles", label: t.nav.schools },
@@ -44,6 +60,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/espace-hors-ligne", label: t.nav.offlineSpace },
     ...(user?.role === "teacher" ? [{ href: "/admin", label: t.nav.teacher }] : []),
   ];
+
+  const allMobileLinks = [...primaryLinks, ...secondaryLinks];
+
+  const isSecondaryActive = secondaryLinks.some((l) => l.href === location);
 
   const handleLogout = async () => {
     setUserMenuOpen(false);
@@ -53,30 +73,59 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={`min-h-screen flex flex-col ${lowConnexion ? "connexion-faible" : ""}`}>
-      {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between mx-auto px-4">
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2 shrink-0">
             <div className="overflow-hidden rounded-lg">
               <img src="/Logo.jpeg" alt="FreeLearn Logo" className="h-9 w-9 object-cover" />
             </div>
             <span className="font-serif font-bold text-xl text-primary hidden sm:inline-block">FreeLearn</span>
-            <span className="font-serif font-bold text-xl text-primary sm:hidden">FreeLearn</span>
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center space-x-5">
-            {navLinks.map((link) => (
+          <nav className="hidden lg:flex items-center gap-1">
+            {primaryLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  location === link.href ? "text-primary" : "text-muted-foreground"
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors hover:text-primary hover:bg-muted ${
+                  location === link.href ? "text-primary bg-primary/5" : "text-muted-foreground"
                 }`}
               >
                 {link.label}
               </Link>
             ))}
+
+            {/* "Plus" dropdown */}
+            <div ref={moreMenuRef} className="relative">
+              <button
+                onClick={() => setMoreMenuOpen((v) => !v)}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors hover:text-primary hover:bg-muted ${
+                  isSecondaryActive ? "text-primary bg-primary/5" : "text-muted-foreground"
+                }`}
+              >
+                Plus
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${moreMenuOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {moreMenuOpen && (
+                <div className="absolute left-0 top-full mt-1.5 w-52 bg-card border rounded-xl shadow-lg z-40 py-1 overflow-hidden">
+                  {secondaryLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMoreMenuOpen(false)}
+                      className={`flex items-center justify-between px-4 py-2.5 text-sm transition-colors hover:bg-muted ${
+                        location === link.href ? "text-primary font-medium" : "text-foreground"
+                      }`}
+                    >
+                      {link.label}
+                      {location === link.href && <ChevronRight className="w-3.5 h-3.5 text-primary" />}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </nav>
 
           <div className="flex items-center space-x-1">
@@ -108,16 +157,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-xs shrink-0">
                     {user.displayName.charAt(0).toUpperCase()}
                   </div>
-                  <span className="max-w-[100px] truncate">{user.displayName.split(" ")[0]}</span>
+                  <span className="max-w-[90px] truncate">{user.displayName.split(" ")[0]}</span>
                   <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
 
                 {userMenuOpen && (
                   <>
-                    <div
-                      className="fixed inset-0 z-30"
-                      onClick={() => setUserMenuOpen(false)}
-                    />
+                    <div className="fixed inset-0 z-30" onClick={() => setUserMenuOpen(false)} />
                     <div className="absolute right-0 top-full mt-1.5 w-52 bg-card border rounded-xl shadow-lg z-40 py-1 overflow-hidden">
                       <div className="px-4 py-3 border-b">
                         <p className="font-semibold text-sm truncate">{user.displayName}</p>
@@ -178,8 +224,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* Mobile Nav */}
         {isMenuOpen && (
           <div className="lg:hidden border-b bg-background">
-            <div className="container py-4 flex flex-col space-y-1 px-4 mx-auto">
-              {navLinks.map((link) => (
+            <div className="container py-4 flex flex-col space-y-1 px-4 mx-auto max-h-[75vh] overflow-y-auto">
+              {allMobileLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -193,14 +239,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   {link.label}
                 </Link>
               ))}
-              {/* Mobile: lang toggle */}
               <button
                 onClick={() => { toggleLang(); setIsMenuOpen(false); }}
                 className="text-left text-sm font-medium py-2 px-3 rounded-lg text-muted-foreground hover:bg-muted transition-colors"
               >
                 🌐 {t.langToggle}
               </button>
-              {/* Mobile user section */}
               {user && (
                 <div className="pt-2 mt-1 border-t space-y-1">
                   <Link
@@ -225,10 +269,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         )}
       </header>
 
-      {/* Main Content */}
       <main className="flex-1">{children}</main>
 
-      {/* Footer */}
       <footer className="bg-primary text-primary-foreground py-12 mt-12">
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2 space-y-4">
