@@ -85,10 +85,10 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
-  event.respondWith(
-    (async () => {
-      // 1. Interception spéciale pour la lecture des PDF sauvegardés
-      if (url.pathname.startsWith("/view-pdf")) {
+  // 1. INTERCEPTION PRIORITAIRE : Lecture PDF (même si c'est une navigation)
+  if (url.pathname.startsWith("/view-pdf")) {
+    event.respondWith(
+      (async () => {
         const targetUrl = url.searchParams.get("url");
         const proxyUrl = `${API_BASE_URL}/api/proxy-pdf?url=${encodeURIComponent(targetUrl || "")}`;
         
@@ -100,17 +100,24 @@ self.addEventListener("fetch", (event) => {
           return cachedResponse;
         }
         
-        // Si pas en cache, on redirige vers le vrai proxy (nécessite internet)
         console.log("SW: PDF non trouvé en cache, redirection vers l'API");
         return fetch(proxyUrl);
-      }
+      })()
+    );
+    return; // On arrête ici pour cette requête
+  }
 
-      // 2. Chercher d'abord dans le cache Média (Images, etc.)
+  // 2. Sécurité : On ne gère que les fichiers de notre domaine pour le reste
+  if (url.origin !== self.location.origin) return;
+
+  event.respondWith(
+    (async () => {
+      // 3. Chercher dans le cache Média (Images, etc.)
       const mediaCache = await caches.open(MEDIA_CACHE);
       const cachedMedia = await mediaCache.match(req);
       if (cachedMedia) return cachedMedia;
 
-      if (url.origin !== self.location.origin) return fetch(req);
+      // 4. Chercher dans le cache App (scripts/styles/html)
 
       // 2. Chercher dans le cache App (scripts/styles/html)
       const appCache = await caches.open(APP_CACHE);
