@@ -12,6 +12,7 @@ import {
   Send,
   BookOpen,
   X,
+  WifiOff,
 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
 import { useToast } from "@/hooks/use-toast";
 import { api, ApiError } from "@/lib/api";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 
 type Category = "mathematiques" | "sciences" | "francais" | "histoire" | "anglais" | "general";
 
@@ -85,6 +87,7 @@ export default function Forum() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [, navigate] = useLocation();
+  const isOnline = useOnlineStatus();
 
   const [activeCategory, setActiveCategory] = useState<Category | "all">("all");
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
@@ -290,6 +293,7 @@ export default function Forum() {
               </div>
 
               {user ? (
+                isOnline ? (
                 <div className="bg-card border rounded-2xl p-4">
                   <textarea
                     value={replyText}
@@ -309,6 +313,12 @@ export default function Forum() {
                     </Button>
                   </div>
                 </div>
+                ) : (
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3 text-sm text-amber-800">
+                    <WifiOff className="w-4 h-4 shrink-0" />
+                    <span>Vous êtes hors-ligne. Reconnectez-vous pour répondre.</span>
+                  </div>
+                )
               ) : (
                 <p className="text-center text-muted-foreground text-sm py-4">{t.forum.loginToPost}</p>
               )}
@@ -331,7 +341,12 @@ export default function Forum() {
             <p className="text-muted-foreground mt-1">{t.forum.subtitle}</p>
           </div>
           {user && (
-            <Button onClick={() => setShowNewPost(true)} className="shrink-0">
+            <Button
+              onClick={() => setShowNewPost(true)}
+              className="shrink-0"
+              disabled={!isOnline}
+              title={!isOnline ? "Connexion internet requise" : undefined}
+            >
               <Plus className="w-4 h-4 mr-1.5" />
               {t.forum.newPost}
             </Button>
@@ -384,7 +399,8 @@ export default function Forum() {
                   <Button variant="outline" onClick={() => setShowNewPost(false)}>{t.forum.cancel}</Button>
                   <Button
                     onClick={() => createPostMutation.mutate({ title: newTitle, body: newBody, category: newCategory })}
-                    disabled={newTitle.trim().length < 5 || newBody.trim().length < 10 || createPostMutation.isPending}
+                    disabled={newTitle.trim().length < 5 || newBody.trim().length < 10 || createPostMutation.isPending || !isOnline}
+                    title={!isOnline ? "Connexion internet requise" : undefined}
                   >
                     {t.forum.publish}
                   </Button>

@@ -9,9 +9,10 @@ import {
   schools, STATUS_LABELS, STATUS_COLORS, haversineKm,
   type School, type SchoolStatus,
 } from "@/data/schools";
-import { MapPin, Locate, Search, AlertTriangle, CheckCircle2, XCircle, Loader2, Info } from "lucide-react";
+import { MapPin, Locate, Search, AlertTriangle, CheckCircle2, XCircle, Loader2, Info, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/hooks/use-language";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 
 const HAITI_CENTER: [number, number] = [18.9712, -72.2852];
 
@@ -37,6 +38,7 @@ function FlyTo({ position }: { position: [number, number] | null }) {
 
 export default function Schools() {
   const { t } = useLanguage();
+  const isOnline = useOnlineStatus();
   const [address, setAddress] = useState("");
   const [searching, setSearching] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; label: string } | null>(null);
@@ -109,6 +111,12 @@ export default function Schools() {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        {!isOnline && (
+          <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 mb-4">
+            <WifiOff className="w-4 h-4 shrink-0" />
+            <span>Hors-ligne — la recherche d'adresse et les tuiles de carte ne sont pas disponibles.</span>
+          </div>
+        )}
         <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -118,9 +126,10 @@ export default function Schools() {
               className="pl-10 h-12"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
+              disabled={!isOnline}
             />
           </div>
-          <Button type="submit" className="h-12" disabled={searching}>
+          <Button type="submit" className="h-12" disabled={searching || !isOnline} title={!isOnline ? "Connexion requise pour rechercher" : undefined}>
             {searching ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
             {t.schools.search}
           </Button>

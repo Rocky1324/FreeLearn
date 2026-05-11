@@ -8,6 +8,7 @@ import {
   ChevronRight,
   BarChart3,
   Loader2,
+  WifiOff,
 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { courses } from "@/data/courses";
 import { useLanguage } from "@/hooks/use-language";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 
 interface DashboardData {
   streak: number;
@@ -31,6 +33,7 @@ interface DashboardData {
 export default function Dashboard() {
   const { user } = useAuth();
   const { t, lang } = useLanguage();
+  const isOnline = useOnlineStatus();
 
   const { data, isLoading } = useQuery<DashboardData>({
     queryKey: ["dashboard"],
@@ -50,7 +53,7 @@ export default function Dashboard() {
 
   const allCoursesStarted = coursesInProgress.length;
 
-  if (isLoading) {
+  if (isLoading && isOnline) {
     return (
       <Layout>
         <div className="min-h-[60vh] flex items-center justify-center">
@@ -72,6 +75,14 @@ export default function Dashboard() {
             {t.dashboard.greeting}, {user?.displayName?.split(" ")[0]} 👋
           </h1>
         </div>
+
+        {/* Offline notice */}
+        {!isOnline && (
+          <div className="mb-6 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <WifiOff className="w-4 h-4 shrink-0" />
+            <span>Hors-ligne — les données affichées peuvent ne pas être à jour.</span>
+          </div>
+        )}
 
         {/* Stats cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">

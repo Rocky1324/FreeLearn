@@ -13,6 +13,7 @@ import {
 } from "@/lib/lesson-storage";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 import { toast } from "sonner";
 import {
   CheckCircle2,
@@ -34,6 +35,7 @@ import { QRCodeModal } from "@/components/QRCodeModal";
 export default function Admin() {
   const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
 
   const [stored, setStored] = useState<string[]>([]);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -401,7 +403,13 @@ export default function Admin() {
                                     onChange={(e) => setUrlDrafts((d) => ({ ...d, [chapter.id]: e.target.value }))}
                                     className="flex-1"
                                   />
-                                  <Button size="sm" onClick={() => handleDownloadFromUrl(chapter.id)} disabled={!urlDraft.trim()} className="bg-green-600 hover:bg-green-700 text-white">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleDownloadFromUrl(chapter.id)}
+                                    disabled={!urlDraft.trim() || !isOnline}
+                                    title={!isOnline ? "Connexion internet requise" : undefined}
+                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                  >
                                     <Download className="w-4 h-4 mr-2" />
                                     Télécharger
                                   </Button>
@@ -472,7 +480,13 @@ export default function Admin() {
                                   onChange={(e) => setDrafts((d) => ({ ...d, [chapter.id]: e.target.value }))}
                                   className="flex-1"
                                 />
-                                <Button size="sm" variant="outline" onClick={() => handleSaveYoutube(chapter.id)} disabled={!draft.trim() || saveYtMutation.isPending}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleSaveYoutube(chapter.id)}
+                                  disabled={!draft.trim() || saveYtMutation.isPending || !isOnline}
+                                  title={!isOnline ? "Connexion internet requise" : undefined}
+                                >
                                   {saveYtMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Youtube className="w-4 h-4 mr-1" />}
                                   Enregistrer
                                 </Button>

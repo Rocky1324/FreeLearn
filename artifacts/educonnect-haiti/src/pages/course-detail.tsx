@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRoute, Link, useLocation } from "wouter";
-import { ArrowLeft, ArrowRight, DownloadCloud, CheckCircle2, PlayCircle, BookText, PenTool, Check, X, Lightbulb, Layers } from "lucide-react";
+import { ArrowLeft, ArrowRight, DownloadCloud, CheckCircle2, PlayCircle, BookText, PenTool, Check, X, Lightbulb, Layers, WifiOff } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -11,11 +11,13 @@ import { getLessonVideo } from "@/lib/lesson-storage";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { useLanguage } from "@/hooks/use-language";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 
 export default function CourseDetail() {
   const [, params] = useRoute("/cours/:id");
   const [, navigate] = useLocation();
   const { t } = useLanguage();
+  const isOnline = useOnlineStatus();
   const courseId = params?.id;
   const course = courses.find(c => c.id === courseId);
   const courseIndex = courses.findIndex(c => c.id === courseId);
@@ -165,6 +167,8 @@ export default function CourseDetail() {
                 onClick={handleDownload}
                 variant={isDownloaded ? "outline" : "secondary"}
                 className={isDownloaded ? "bg-green-500/20 text-white border-green-400 hover:bg-green-500/30" : "font-bold"}
+                disabled={!isDownloaded && !isOnline}
+                title={!isDownloaded && !isOnline ? "Connexion requise pour télécharger" : undefined}
               >
                 {isDownloaded ? (
                   <><CheckCircle2 className="mr-2 h-4 w-4" /> {t.courseDetail.offlineAvailable}</>
@@ -257,6 +261,15 @@ export default function CourseDetail() {
                     {useLocal ? (
                       <video key={`local-${activeChapter.id}-${useUploaded ? "u" : "b"}`} className="w-full h-full" src={videoSrc} controls playsInline />
                     ) : (customYoutubeId || activeChapter.youtubeId) ? (
+                      !isOnline ? (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-8 text-center gap-3">
+                          <WifiOff className="w-10 h-10 text-amber-400/70" />
+                          <div>
+                            <p className="font-semibold text-white/80 mb-1">Vidéo non disponible hors-ligne</p>
+                            <p className="text-xs text-white/50 max-w-xs">Cette vidéo YouTube nécessite une connexion internet.</p>
+                          </div>
+                        </div>
+                      ) : (
                       <iframe
                         key={`${activeChapter.id}-${customYoutubeId || activeChapter.youtubeId}`}
                         className="w-full h-full"
@@ -265,6 +278,7 @@ export default function CourseDetail() {
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       />
+                      )
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-8 text-center gap-4">
                         <PlayCircle className="w-14 h-14 text-white/40" />
@@ -422,14 +436,17 @@ export default function CourseDetail() {
               )}
 
               {/* Chapter completion toggle */}
-              <div className="pt-6 border-t mt-4">
+              <div className="pt-6 border-t mt-4 flex items-center gap-3 flex-wrap">
                 <button
                   onClick={() => {
+                    if (!isOnline) return;
                     const wasNotDone = !isDone(activeChapter.id);
                     toggleDone(activeChapter.id, courseId!);
                     if (wasNotDone) toast.success(t.courseDetail.chapterDoneToast);
                   }}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
+                  disabled={!isOnline}
+                  title={!isOnline ? "Connexion requise pour enregistrer la progression" : undefined}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                     isDone(activeChapter.id)
                       ? "bg-green-50 border-green-300 text-green-700 dark:bg-green-950/30 dark:border-green-700 dark:text-green-400"
                       : "bg-card border-border text-muted-foreground hover:border-green-300 hover:text-green-600"
@@ -438,6 +455,12 @@ export default function CourseDetail() {
                   <CheckCircle2 className={`w-5 h-5 ${isDone(activeChapter.id) ? "text-green-500" : "text-muted-foreground/40"}`} />
                   {isDone(activeChapter.id) ? t.courseDetail.markedDone : t.courseDetail.markDone}
                 </button>
+                {!isOnline && (
+                  <span className="flex items-center gap-1.5 text-xs text-amber-700">
+                    <WifiOff className="w-3.5 h-3.5" />
+                    Progression sauvegardée à la reconnexion
+                  </span>
+                )}
               </div>
 
               {submitted[activeChapter.id] && (
