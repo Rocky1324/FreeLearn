@@ -35,11 +35,18 @@ self.addEventListener("message", (event) => {
           data.urls.map((url) =>
             fetch(url)
               .then((res) => {
-                if (res.ok) cache.put(url, res);
+                if (res.ok) return cache.put(url, res);
               })
               .catch(() => { })
           )
-        );
+        ).then(() => {
+          // Une fois fini, on prévient l'interface
+          if (event.source) {
+            data.urls.forEach(url => {
+              event.source.postMessage({ type: "CACHED_STATUS", url, cached: true });
+            });
+          }
+        });
       })
     );
     if (event.source) {

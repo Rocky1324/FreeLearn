@@ -255,8 +255,6 @@ function OfflineDownload({ url, title }: { url: string; title: string }) {
         type: "CACHE_MEDIA",
         urls: [proxyUrl]
       });
-      // On simule une fin de chargement (le SW confirmera via message)
-      setTimeout(() => setStatus("cached"), 2000);
     }
   };
 
