@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 import { offlineDB } from "@/lib/offline-db";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 import {
   examPapers,
   examResources,
@@ -312,6 +313,7 @@ function OfflineDownload({ res }: { res: ExamResource }) {
 function ResourcesTab() {
   const [activeLevel, setActiveLevel] = useState<ExamLevel>("9ème AF");
   const [activeSubject, setActiveSubject] = useState<string>("Tous");
+  const isOnline = useOnlineStatus();
 
   const filtered = examResources.filter((r) => r.level === activeLevel);
   const subjects = Array.from(new Set(filtered.map((r) => r.subject)));
@@ -427,15 +429,25 @@ function ResourcesTab() {
                         </p>
                         
                         <div className="flex flex-wrap gap-2 mt-auto pt-2">
-                          <a 
-                            href={`${API_BASE_URL}/api/proxy-pdf?url=${encodeURIComponent(res.url)}`}
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            Lire le PDF
-                          </a>
+                          {isOnline ? (
+                            <a
+                              href={`${API_BASE_URL}/api/proxy-pdf?url=${encodeURIComponent(res.url)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                              Lire le PDF
+                            </a>
+                          ) : (
+                            <span
+                              className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground cursor-not-allowed"
+                              title="Connexion internet requise"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                              Lire le PDF
+                            </span>
+                          )}
                           <OfflineDownload res={res} />
                         </div>
                       </div>

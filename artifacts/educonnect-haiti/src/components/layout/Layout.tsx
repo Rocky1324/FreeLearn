@@ -5,6 +5,7 @@ import {
   Menu,
   X,
   WifiOff,
+  Wifi,
   MapPin,
   Moon,
   Sun,
@@ -17,20 +18,25 @@ import {
   MessageSquare,
   ChevronRight,
 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [showReconnected, setShowReconnected] = useState(false);
+  const [wasOffline, setWasOffline] = useState(false);
   const [lowConnexion, setLowConnexion] = useLocalStorage("connexion-faible", false);
   const [location] = useLocation();
   const { theme, toggle: toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const { t, toggle: toggleLang } = useLanguage();
+  const isOnline = useOnlineStatus();
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -42,6 +48,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  useEffect(() => {
+    if (!isOnline) {
+      setWasOffline(true);
+      setShowReconnected(false);
+    } else if (wasOffline) {
+      setShowReconnected(true);
+      const timer = setTimeout(() => {
+        setShowReconnected(false);
+        setWasOffline(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOnline]);
 
   const primaryLinks = [
     { href: "/", label: t.nav.home },
@@ -268,6 +288,46 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
         )}
       </header>
+
+      {/* Offline / Reconnected banner */}
+      <AnimatePresence>
+        {(!isOnline || showReconnected) && (
+          <motion.div
+            key={isOnline ? "reconnected" : "offline"}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="overflow-hidden z-40 relative"
+          >
+            <div
+              className={`flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium ${
+                !isOnline
+                  ? "bg-amber-50 border-b border-amber-200 text-amber-800"
+                  : "bg-green-50 border-b border-green-200 text-green-800"
+              }`}
+            >
+              {!isOnline ? (
+                <>
+                  <WifiOff className="w-4 h-4 shrink-0" />
+                  <span>
+                    Pas de connexion — Seul votre{" "}
+                    <Link href="/espace-hors-ligne" className="underline font-semibold hover:opacity-80">
+                      espace hors-ligne
+                    </Link>{" "}
+                    est disponible.
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Wifi className="w-4 h-4 shrink-0" />
+                  <span>Connexion rétablie !</span>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main className="flex-1">{children}</main>
 
