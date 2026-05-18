@@ -26,6 +26,10 @@ services:
           property: connectionString
       - key: NODE_ENV
         value: production
+      - key: FRONTEND_URL
+        value: https://educonnect-frontend-vqa9.onrender.com
+      - key: GOOGLE_REDIRECT_URI
+        value: https://educonnect-api-ut08.onrender.com/api/auth/google/callback
 
   # 3. Frontend Static Site
   - type: web
@@ -34,9 +38,6 @@ services:
     buildCommand: npm install -g pnpm@10.33.2 && pnpm install && pnpm --filter @workspace/educonnect-haiti build
     staticPublishPath: ./artifacts/educonnect-haiti/dist/public
     routes:
-      - type: rewrite
-        source: /assets/*
-        destination: /assets/*
       - type: rewrite
         source: /*
         destination: /index.html
@@ -47,9 +48,5 @@ services:
         value: "10.33.2"
       - key: NODE_ENV
         value: production
-      - key: BASE_PATH
-        value: "/"
-      - key: PORT
-        value: "3000"
       - key: VITE_API_URL
-        value: "REPLACEME_IN_RENDER_DASHBOARD"
+        value: https://educonnect-api-ut08.onrender.com
