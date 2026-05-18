@@ -11,6 +11,8 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import PrivacyPolicy from "@/pages/privacy-policy";
+import TermsOfUse from "@/pages/terms-of-use";
 
 // App pages
 import Home from "@/pages/home";
@@ -48,6 +50,8 @@ function Router() {
       <Route path="/bienvenue" component={Landing} />
       <Route path="/connexion" component={Login} />
       <Route path="/inscription" component={Register} />
+      <Route path="/politique-de-confidentialite" component={PrivacyPolicy} />
+      <Route path="/conditions-utilisation" component={TermsOfUse} />
 
       {/* Protected */}
       <Route path="/">{() => <P><Home /></P>}</Route>

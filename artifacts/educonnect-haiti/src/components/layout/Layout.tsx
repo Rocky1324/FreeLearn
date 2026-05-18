@@ -375,8 +375,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </ul>
           </div>
         </div>
-        <div className="container mx-auto px-4 mt-8 pt-8 border-t border-primary-foreground/20 text-center text-sm text-primary-foreground/60">
-          © {new Date().getFullYear()} FreeLearn. {t.footer.copyright}
+        <div className="container mx-auto px-4 mt-8 pt-8 border-t border-primary-foreground/20 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-primary-foreground/60">
+          <span>© {new Date().getFullYear()} FreeLearn. {t.footer.copyright}</span>
+          <div className="flex items-center gap-4">
+            <Link href="/politique-de-confidentialite" className="hover:text-primary-foreground transition-colors underline underline-offset-2">
+              Politique de confidentialité
+            </Link>
+            <Link href="/conditions-utilisation" className="hover:text-primary-foreground transition-colors underline underline-offset-2">
+              Conditions d'utilisation
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
