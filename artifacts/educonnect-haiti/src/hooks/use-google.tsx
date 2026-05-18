@@ -1,6 +1,10 @@
 import { useState, useCallback } from "react";
-import { api } from "@/lib/api";
+import { api, API_BASE_URL } from "@/lib/api";
 import { toast } from "sonner";
+
+function redirectToGoogleLogin() {
+  window.location.href = `${API_BASE_URL}/api/auth/google`;
+}
 
 export function useGoogleDrive() {
   const [uploading, setUploading] = useState(false);
@@ -24,7 +28,7 @@ export function useGoogleDrive() {
         toast.error("Connectez-vous avec Google pour utiliser Google Drive.", {
           action: {
             label: "Connexion Google",
-            onClick: () => { window.location.href = "/api/auth/google"; },
+            onClick: redirectToGoogleLogin,
           },
         });
       } else {
@@ -39,7 +43,7 @@ export function useGoogleDrive() {
   const uploadBlob = useCallback(async (blob: Blob, fileName: string) => {
     setUploading(true);
     try {
-      const response = await fetch("/api/google/drive/upload-blob", {
+      const response = await fetch(`${API_BASE_URL}/api/google/drive/upload-blob`, {
         method: "POST",
         headers: {
           "Content-Type": blob.type || "application/octet-stream",
@@ -54,7 +58,7 @@ export function useGoogleDrive() {
           toast.error("Connectez-vous avec Google pour utiliser Google Drive.", {
             action: {
               label: "Connexion Google",
-              onClick: () => { window.location.href = "/api/auth/google"; },
+              onClick: redirectToGoogleLogin,
             },
           });
           return null;
@@ -97,7 +101,7 @@ export function useGoogleCalendar() {
         toast.error("Connectez-vous avec Google pour synchroniser le calendrier.", {
           action: {
             label: "Connexion Google",
-            onClick: () => { window.location.href = "/api/auth/google"; },
+            onClick: redirectToGoogleLogin,
           },
         });
       } else {
@@ -123,7 +127,7 @@ export function useGoogleCalendar() {
         toast.error("Connectez-vous avec Google pour utiliser Google Calendar.", {
           action: {
             label: "Connexion Google",
-            onClick: () => { window.location.href = "/api/auth/google"; },
+            onClick: redirectToGoogleLogin,
           },
         });
       } else {

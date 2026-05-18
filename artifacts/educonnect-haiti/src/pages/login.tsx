@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
-import { ApiError } from "@/lib/api";
+import { ApiError, API_BASE_URL } from "@/lib/api";
 import { useLanguage } from "@/hooks/use-language";
 import { toast } from "sonner";
 
@@ -61,13 +61,12 @@ export default function Login() {
 
   const handleGoogle = () => {
     setGoogleLoading(true);
-    window.location.href = "/api/auth/google";
+    window.location.href = `${API_BASE_URL}/api/auth/google`;
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-primary/5 to-background px-4 py-12">
       <div className="w-full max-w-sm">
-        {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/bienvenue">
             <div className="inline-flex items-center gap-2 group cursor-pointer">
@@ -83,7 +82,6 @@ export default function Login() {
           <p className="text-muted-foreground text-sm">{t.login.subtitle}</p>
         </div>
 
-        {/* Google Sign-In */}
         <Button
           type="button"
           variant="outline"

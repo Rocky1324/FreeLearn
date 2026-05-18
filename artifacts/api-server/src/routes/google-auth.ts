@@ -12,7 +12,16 @@ const SESSION_MS = 30 * 24 * 60 * 60 * 1000;
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || "https://defa549e-2586-4031-94db-f31ae1bbfd87-00-v5fr9q0zbzr3.picard.replit.dev/api/auth/google/callback";
+
+// In production set GOOGLE_REDIRECT_URI to your API server callback URL,
+// e.g. https://educonnect-api-ut08.onrender.com/api/auth/google/callback
+const REDIRECT_URI =
+  process.env.GOOGLE_REDIRECT_URI ||
+  "https://defa549e-2586-4031-94db-f31ae1bbfd87-00-v5fr9q0zbzr3.picard.replit.dev/api/auth/google/callback";
+
+// In production set FRONTEND_URL to your frontend URL,
+// e.g. https://educonnect-frontend-vqa9.onrender.com
+const FRONTEND_URL = process.env.FRONTEND_URL || "";
 
 function getOAuth2Client() {
   return new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, REDIRECT_URI);
@@ -50,8 +59,12 @@ router.get("/google", (_req, res) => {
 
 router.get("/google/callback", async (req, res) => {
   const code = req.query.code as string | undefined;
+
+  const loginPage = `${FRONTEND_URL}/connexion`;
+  const homePage = `${FRONTEND_URL}/`;
+
   if (!code) {
-    res.redirect("/connexion?error=google_no_code");
+    res.redirect(`${loginPage}?error=google_no_code`);
     return;
   }
 
@@ -64,7 +77,7 @@ router.get("/google/callback", async (req, res) => {
     const { data: profile } = await oauth2.userinfo.get();
 
     if (!profile.email || !profile.id) {
-      res.redirect("/connexion?error=google_no_profile");
+      res.redirect(`${loginPage}?error=google_no_profile`);
       return;
     }
 
@@ -139,10 +152,10 @@ router.get("/google/callback", async (req, res) => {
     });
 
     setSession(res, token);
-    res.redirect("/");
+    res.redirect(homePage);
   } catch (err) {
     console.error("Google OAuth error:", err);
-    res.redirect("/connexion?error=google_failed");
+    res.redirect(`${loginPage}?error=google_failed`);
   }
 });
 
