@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sum } from "drizzle-orm";
 import { db } from "@workspace/db";
-import { userProgressTable } from "@workspace/db/schema";
+import { userProgressTable, studySessionsTable } from "@workspace/db/schema";
 import { requireAuth, AuthRequest } from "../middleware/require-auth";
 
 const router = Router();
@@ -10,14 +10,26 @@ router.get("/", requireAuth, async (req: Request, res: Response) => {
   const user = (req as AuthRequest).user;
 
   try {
-    const progress = await db
-      .select()
-      .from(userProgressTable)
-      .where(eq(userProgressTable.userId, user.id))
-      .orderBy(desc(userProgressTable.completedAt));
+    const [progress, sessionStats, recentSessions] = await Promise.all([
+      db
+        .select()
+        .from(userProgressTable)
+        .where(eq(userProgressTable.userId, user.id))
+        .orderBy(desc(userProgressTable.completedAt)),
+      db
+        .select({ totalMinutes: sum(studySessionsTable.completedMinutes) })
+        .from(studySessionsTable)
+        .where(eq(studySessionsTable.userId, user.id)),
+      db
+        .select()
+        .from(studySessionsTable)
+        .where(eq(studySessionsTable.userId, user.id))
+        .orderBy(desc(studySessionsTable.completedAt))
+        .limit(10),
+    ]);
 
     const dateSet = new Set(
-      progress.map((p: typeof progress[0]) => p.completedAt.toISOString().split("T")[0]),
+      progress.map((p) => p.completedAt.toISOString().split("T")[0]),
     );
 
     let streak = 0;
@@ -40,18 +52,25 @@ router.get("/", requireAuth, async (req: Request, res: Response) => {
     }
 
     const totalCompleted = progress.length;
-    const estimatedStudyHours =
-      Math.round(((totalCompleted * 20) / 60) * 10) / 10;
+    const studyMinutes = Number(sessionStats[0]?.totalMinutes ?? 0);
+    const studyHours = Math.round((studyMinutes / 60) * 10) / 10;
 
     res.json({
       streak,
       totalCompleted,
-      estimatedStudyHours,
+      studyMinutes,
+      studyHours,
       courseProgress,
-      recentActivity: progress.slice(0, 10).map((p: typeof progress[0]) => ({
+      recentActivity: progress.slice(0, 10).map((p) => ({
         courseId: p.courseId,
         chapterId: p.chapterId,
         completedAt: p.completedAt,
+      })),
+      recentSessions: recentSessions.map((s) => ({
+        subject: s.subject,
+        completedMinutes: s.completedMinutes,
+        plannedMinutes: s.plannedMinutes,
+        completedAt: s.completedAt,
       })),
     });
   } catch {

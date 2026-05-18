@@ -9,6 +9,7 @@ import {
   BarChart3,
   Loader2,
   WifiOff,
+  Timer,
 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -21,11 +22,18 @@ import { useOnlineStatus } from "@/hooks/use-online-status";
 interface DashboardData {
   streak: number;
   totalCompleted: number;
-  estimatedStudyHours: number;
+  studyMinutes: number;
+  studyHours: number;
   courseProgress: Record<string, string[]>;
   recentActivity: {
     courseId: string;
     chapterId: string;
+    completedAt: string;
+  }[];
+  recentSessions: {
+    subject: string;
+    completedMinutes: number;
+    plannedMinutes: number;
     completedAt: string;
   }[];
 }
@@ -53,6 +61,14 @@ export default function Dashboard() {
 
   const allCoursesStarted = coursesInProgress.length;
 
+  const studyHoursDisplay = data
+    ? data.studyHours > 0
+      ? `${data.studyHours}h`
+      : data.totalCompleted > 0
+        ? `~${Math.round((data.totalCompleted * 20) / 60 * 10) / 10}h`
+        : "0h"
+    : "0h";
+
   if (isLoading && isOnline) {
     return (
       <Layout>
@@ -63,10 +79,11 @@ export default function Dashboard() {
     );
   }
 
+  const locale = lang === "ht" ? "fr-HT" : "fr-HT";
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-10 max-w-5xl">
-        {/* Header */}
         <div className="mb-10">
           <p className="text-muted-foreground text-sm font-medium mb-1">
             {t.dashboard.subtitle}
@@ -76,7 +93,6 @@ export default function Dashboard() {
           </h1>
         </div>
 
-        {/* Offline notice */}
         {!isOnline && (
           <div className="mb-6 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
             <WifiOff className="w-4 h-4 shrink-0" />
@@ -84,7 +100,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Stats cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
           <StatCard
             icon={<Flame className="w-5 h-5 text-orange-500" />}
@@ -104,8 +119,12 @@ export default function Dashboard() {
             icon={<Clock className="w-5 h-5 text-blue-500" />}
             iconBg="bg-blue-100 dark:bg-blue-950/30"
             label={t.dashboard.hoursLabel}
-            value={`${data?.estimatedStudyHours ?? 0}h`}
-            sub={t.dashboard.hoursSub}
+            value={studyHoursDisplay}
+            sub={
+              data && data.studyMinutes > 0
+                ? `${data.studyMinutes} min réelles`
+                : t.dashboard.hoursSub
+            }
           />
           <StatCard
             icon={<Trophy className="w-5 h-5 text-amber-500" />}
@@ -116,7 +135,6 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Course progress */}
         <div className="mb-10">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-xl font-bold flex items-center gap-2">
@@ -171,7 +189,36 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Recent activity */}
+        {data?.recentSessions && data.recentSessions.length > 0 && (
+          <div className="mb-10">
+            <h2 className="text-xl font-bold mb-5 flex items-center gap-2">
+              <Timer className="w-5 h-5 text-primary" />
+              Sessions d'étude récentes
+            </h2>
+            <div className="bg-card border rounded-2xl shadow-sm divide-y">
+              {data.recentSessions.map((s, i) => {
+                const date = new Date(s.completedAt).toLocaleDateString(locale, { day: "numeric", month: "short" });
+                const pct = Math.min(100, Math.round((s.completedMinutes / s.plannedMinutes) * 100));
+                return (
+                  <div key={i} className="flex items-center gap-4 px-5 py-4 first:rounded-t-2xl last:rounded-b-2xl">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center shrink-0">
+                      <Timer className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{s.subject}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {s.completedMinutes} / {s.plannedMinutes} min
+                        {pct >= 100 ? " · ✓ complète" : ` · ${pct}%`}
+                      </p>
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">{date}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {data?.recentActivity && data.recentActivity.length > 0 && (
           <div>
             <h2 className="text-xl font-bold mb-5">{t.dashboard.recentTitle}</h2>
@@ -179,7 +226,6 @@ export default function Dashboard() {
               {data.recentActivity.map((a, i) => {
                 const course = courses.find((c) => c.id === a.courseId);
                 const chapter = course?.chapters.find((ch) => ch.id === a.chapterId);
-                const locale = lang === "ht" ? "fr-HT" : "fr-HT";
                 const date = new Date(a.completedAt).toLocaleDateString(locale, { day: "numeric", month: "short" });
                 return (
                   <div key={i} className="flex items-center gap-4 px-5 py-4 first:rounded-t-2xl last:rounded-b-2xl">

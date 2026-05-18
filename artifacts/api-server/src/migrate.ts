@@ -28,6 +28,17 @@ export async function runMigrations(): Promise<void> {
         ALTER COLUMN password_hash DROP NOT NULL;
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS study_sessions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        subject TEXT NOT NULL,
+        planned_minutes INTEGER NOT NULL,
+        completed_minutes INTEGER NOT NULL,
+        completed_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+
     console.log("[migrate] Schema up to date.");
   } catch (err) {
     console.error("[migrate] Migration failed:", err);

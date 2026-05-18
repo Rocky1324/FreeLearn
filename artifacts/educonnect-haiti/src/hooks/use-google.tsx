@@ -26,10 +26,7 @@ export function useGoogleDrive() {
     } catch (err: any) {
       if (err?.message === "google_not_connected") {
         toast.error("Connectez-vous avec Google pour utiliser Google Drive.", {
-          action: {
-            label: "Connexion Google",
-            onClick: redirectToGoogleLogin,
-          },
+          action: { label: "Connexion Google", onClick: redirectToGoogleLogin },
         });
       } else {
         toast.error("Erreur lors de l'envoi vers Google Drive.");
@@ -56,10 +53,7 @@ export function useGoogleDrive() {
         const data = await response.json().catch(() => ({}));
         if (data.error === "google_not_connected") {
           toast.error("Connectez-vous avec Google pour utiliser Google Drive.", {
-            action: {
-              label: "Connexion Google",
-              onClick: redirectToGoogleLogin,
-            },
+            action: { label: "Connexion Google", onClick: redirectToGoogleLogin },
           });
           return null;
         }
@@ -84,8 +78,31 @@ export function useGoogleDrive() {
   return { uploadFileFromUrl, uploadBlob, uploading };
 }
 
+export interface GoogleCalendarEvent {
+  id: string;
+  summary?: string;
+  description?: string;
+  start?: { date?: string; dateTime?: string };
+  end?: { date?: string; dateTime?: string };
+  colorId?: string;
+}
+
 export function useGoogleCalendar() {
   const [syncing, setSyncing] = useState(false);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+
+  const fetchGoogleEvents = useCallback(async (): Promise<GoogleCalendarEvent[]> => {
+    setLoadingEvents(true);
+    try {
+      const result = await api.get<{ events: GoogleCalendarEvent[] }>("/api/google/calendar/events");
+      return result.events;
+    } catch (err: any) {
+      if (err?.message === "google_not_connected") return [];
+      return [];
+    } finally {
+      setLoadingEvents(false);
+    }
+  }, []);
 
   const syncAcademicEvents = useCallback(async (events: { date: string; title: string; type: string }[]) => {
     setSyncing(true);
@@ -99,10 +116,7 @@ export function useGoogleCalendar() {
     } catch (err: any) {
       if (err?.message === "google_not_connected") {
         toast.error("Connectez-vous avec Google pour synchroniser le calendrier.", {
-          action: {
-            label: "Connexion Google",
-            onClick: redirectToGoogleLogin,
-          },
+          action: { label: "Connexion Google", onClick: redirectToGoogleLogin },
         });
       } else {
         toast.error("Erreur lors de la synchronisation du calendrier.");
@@ -114,30 +128,17 @@ export function useGoogleCalendar() {
   }, []);
 
   const addStudySession = useCallback(async (summary: string, description: string, startDate: string, endDate: string) => {
-    setSyncing(true);
     try {
       const result = await api.post<{ event: any }>(
         "/api/google/calendar/events",
         { summary, description, startDate, endDate, allDay: true }
       );
-      toast.success("Session de révision ajoutée à Google Calendar !");
       return result.event;
     } catch (err: any) {
-      if (err?.message === "google_not_connected") {
-        toast.error("Connectez-vous avec Google pour utiliser Google Calendar.", {
-          action: {
-            label: "Connexion Google",
-            onClick: redirectToGoogleLogin,
-          },
-        });
-      } else {
-        toast.error("Erreur lors de l'ajout à Google Calendar.");
-      }
-      throw err;
-    } finally {
-      setSyncing(false);
+      if (err?.message === "google_not_connected") return null;
+      return null;
     }
   }, []);
 
-  return { syncAcademicEvents, addStudySession, syncing };
+  return { syncAcademicEvents, addStudySession, fetchGoogleEvents, syncing, loadingEvents };
 }

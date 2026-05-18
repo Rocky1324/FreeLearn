@@ -8,6 +8,7 @@ import progressRouter from "./progress";
 import teacherRouter from "./teacher";
 import dashboardRouter from "./dashboard";
 import forumRouter from "./forum";
+import sessionsRouter from "./sessions";
 
 const router: IRouter = Router();
 
@@ -20,6 +21,7 @@ router.use("/progress", progressRouter);
 router.use("/teacher/videos", teacherRouter);
 router.use("/dashboard", dashboardRouter);
 router.use("/forum", forumRouter);
+router.use("/sessions", sessionsRouter);
 
 // Proxy pour permettre le cache offline des PDF externes
 router.get("/proxy-pdf", async (req, res) => {
