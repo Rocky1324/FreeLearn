@@ -152,7 +152,16 @@ export default function Landing() {
           <img src="/Logo.jpeg" alt="FreeLearn" className="h-5 w-5 rounded object-cover" />
           <span className="font-bold text-foreground">FreeLearn</span>
         </div>
-        <p>{t.landing.footerTagline}</p>
+        <p className="mb-3">{t.landing.footerTagline}</p>
+        <div className="flex items-center justify-center gap-4 text-xs">
+          <Link href="/politique-de-confidentialite" className="hover:text-foreground underline underline-offset-2 transition-colors">
+            Politique de confidentialité
+          </Link>
+          <span>·</span>
+          <Link href="/conditions-utilisation" className="hover:text-foreground underline underline-offset-2 transition-colors">
+            Conditions d'utilisation
+          </Link>
+        </div>
       </footer>
     </div>
   );
