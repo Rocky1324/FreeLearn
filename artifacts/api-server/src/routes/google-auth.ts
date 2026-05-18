@@ -10,21 +10,25 @@ const router = Router();
 
 const SESSION_MS = 30 * 24 * 60 * 60 * 1000;
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
-// In production set GOOGLE_REDIRECT_URI to your API server callback URL,
-// e.g. https://educonnect-api-ut08.onrender.com/api/auth/google/callback
-const REDIRECT_URI =
-  process.env.GOOGLE_REDIRECT_URI ||
-  "https://defa549e-2586-4031-94db-f31ae1bbfd87-00-v5fr9q0zbzr3.picard.replit.dev/api/auth/google/callback";
+function getRedirectUri(req: any): string {
+  if (process.env.GOOGLE_REDIRECT_URI) return process.env.GOOGLE_REDIRECT_URI;
+  const protocol = req.headers["x-forwarded-proto"] || req.protocol || "https";
+  const host = req.headers["x-forwarded-host"] || req.headers.host || "";
+  return `${protocol}://${host}/api/auth/google/callback`;
+}
 
-// In production set FRONTEND_URL to your frontend URL,
-// e.g. https://educonnect-frontend-vqa9.onrender.com
-const FRONTEND_URL = process.env.FRONTEND_URL || "";
+function getFrontendUrl(req: any): string {
+  if (process.env.FRONTEND_URL) return process.env.FRONTEND_URL;
+  const protocol = req.headers["x-forwarded-proto"] || req.protocol || "https";
+  const host = req.headers["x-forwarded-host"] || req.headers.host || "";
+  return `${protocol}://${host}`;
+}
 
-function getOAuth2Client() {
-  return new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, REDIRECT_URI);
+function getOAuth2Client(redirectUri: string) {
+  return new google.auth.OAuth2(GOOGLE_CLIENT_ID!, GOOGLE_CLIENT_SECRET!, redirectUri);
 }
 
 function hashToken(token: string): string {
@@ -34,15 +38,20 @@ function hashToken(token: string): string {
 function setSession(res: any, token: string): void {
   res.cookie("session", token, {
     httpOnly: true,
-    sameSite: "none",
+    sameSite: "lax",
     maxAge: SESSION_MS,
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     path: "/",
   });
 }
 
-router.get("/google", (_req, res) => {
-  const oauth2Client = getOAuth2Client();
+router.get("/google", (req, res) => {
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    res.redirect(`${getFrontendUrl(req)}/connexion?error=google_not_configured`);
+    return;
+  }
+  const redirectUri = getRedirectUri(req);
+  const oauth2Client = getOAuth2Client(redirectUri);
   const url = oauth2Client.generateAuthUrl({
     access_type: "offline",
     prompt: "consent",
@@ -50,8 +59,6 @@ router.get("/google", (_req, res) => {
       "openid",
       "email",
       "profile",
-      "https://www.googleapis.com/auth/calendar",
-      "https://www.googleapis.com/auth/drive.file",
     ],
   });
   res.redirect(url);
@@ -59,9 +66,10 @@ router.get("/google", (_req, res) => {
 
 router.get("/google/callback", async (req, res) => {
   const code = req.query.code as string | undefined;
-
-  const loginPage = `${FRONTEND_URL}/connexion`;
-  const homePage = `${FRONTEND_URL}/`;
+  const redirectUri = getRedirectUri(req);
+  const frontendUrl = getFrontendUrl(req);
+  const loginPage = `${frontendUrl}/connexion`;
+  const homePage = `${frontendUrl}/`;
 
   if (!code) {
     res.redirect(`${loginPage}?error=google_no_code`);
@@ -69,7 +77,7 @@ router.get("/google/callback", async (req, res) => {
   }
 
   try {
-    const oauth2Client = getOAuth2Client();
+    const oauth2Client = getOAuth2Client(redirectUri);
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
 

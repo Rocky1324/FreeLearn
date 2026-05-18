@@ -38,6 +38,7 @@ export default function Login() {
     if (err === "google_failed") toast.error("La connexion Google a échoué. Réessayez.");
     else if (err === "google_no_profile") toast.error("Impossible de récupérer votre profil Google.");
     else if (err === "google_no_code") toast.error("Autorisation Google annulée.");
+    else if (err === "google_not_configured") toast.error("La connexion Google n'est pas encore configurée. Utilisez votre email.");
   }, []);
 
   if (user) {

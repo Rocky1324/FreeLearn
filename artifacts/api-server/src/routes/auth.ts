@@ -27,9 +27,9 @@ function hashToken(token: string): string {
 function setSession(res: any, token: string): void {
   res.cookie("session", token, {
     httpOnly: true,
-    sameSite: "none",
+    sameSite: "lax",
     maxAge: SESSION_MS,
-    secure: true, // Doit être true pour sameSite: "none"
+    secure: process.env.NODE_ENV === "production",
     path: "/",
   });
 }
