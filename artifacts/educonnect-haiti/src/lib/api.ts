@@ -23,26 +23,19 @@ async function request<T = unknown>(
       credentials: "include",
     });
   } catch (err) {
-    // Erreur réseau (ex: le serveur n'est pas joignable ou l'URL est mauvaise)
     console.error("Erreur de connexion API:", err);
-    throw new ApiError(
-      0,
-      `Impossible de contacter le serveur. Vérifiez que l'URL de l'API est correcte (${API_BASE_URL})`
-    );
+    throw new ApiError(0, "Pas de connexion internet. Vérifiez votre réseau et réessayez.");
   }
 
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new ApiError(res.status, (data as any).error ?? `Erreur serveur (${res.status})`);
+    throw new ApiError(res.status, (data as any).error ?? "Une erreur est survenue. Réessayez.");
   }
 
   const contentType = res.headers.get("content-type");
   if (!contentType || !contentType.includes("application/json")) {
-    console.error("Le serveur n'a pas renvoyé de JSON. Type reçu:", contentType);
-    throw new ApiError(
-      0,
-      "L'URL de l'API est mal configurée (le serveur a renvoyé du HTML au lieu de JSON). Vérifiez la variable VITE_API_URL."
-    );
+    console.error("Réponse non-JSON reçue. Type:", contentType, "URL:", `${API_BASE_URL}${path}`);
+    throw new ApiError(0, "Une erreur est survenue. Réessayez.");
   }
 
   return res.json() as Promise<T>;
