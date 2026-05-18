@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Calendar, Plus, X, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Plus, X, Clock, Bell } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -8,6 +8,64 @@ import { useLanguage } from "@/hooks/use-language";
 
 type Session = { courseId: string; duration: number };
 type CalendarData = { [dateKey: string]: Session[] };
+
+interface AcademicEvent {
+  date: string;
+  title: string;
+  type: "exam" | "holiday" | "start" | "end" | "deadline";
+}
+
+const ACADEMIC_EVENTS: AcademicEvent[] = [
+  { date: "2025-09-08", title: "Rentrée scolaire 2025-2026", type: "start" },
+  { date: "2025-10-17", title: "Fête de la Dessalinienne", type: "holiday" },
+  { date: "2025-11-01", title: "Fête de la Toussaint", type: "holiday" },
+  { date: "2025-11-18", title: "Jour de la Vertières", type: "holiday" },
+  { date: "2025-12-05", title: "Jour de la Découverte", type: "holiday" },
+  { date: "2025-12-22", title: "Début des vacances de Noël", type: "holiday" },
+  { date: "2026-01-01", title: "Fête de l'Indépendance (1er janv.)", type: "holiday" },
+  { date: "2026-01-02", title: "Fête des Ancêtres", type: "holiday" },
+  { date: "2026-01-07", title: "Reprise des cours", type: "start" },
+  { date: "2026-02-16", title: "Début du Carnaval", type: "holiday" },
+  { date: "2026-02-18", title: "Fin du Carnaval", type: "holiday" },
+  { date: "2026-03-02", title: "Lundi Gras", type: "holiday" },
+  { date: "2026-03-16", title: "Début des révisions bac blanc", type: "exam" },
+  { date: "2026-03-27", title: "Vendredi Saint", type: "holiday" },
+  { date: "2026-04-14", title: "Fin du 2e trimestre", type: "end" },
+  { date: "2026-04-14", title: "Début vacances de Pâques", type: "holiday" },
+  { date: "2026-04-27", title: "Reprise des cours (3e trimestre)", type: "start" },
+  { date: "2026-05-01", title: "Fête du Travail", type: "holiday" },
+  { date: "2026-05-18", title: "Fête du Drapeau et de l'Université", type: "holiday" },
+  { date: "2026-06-01", title: "Début des révisions examens d'État", type: "exam" },
+  { date: "2026-06-15", title: "Examens d'État — 9ème AF", type: "exam" },
+  { date: "2026-06-22", title: "Examens BAC — Rhétorique", type: "exam" },
+  { date: "2026-06-29", title: "Examens BAC — Philo / NS", type: "exam" },
+  { date: "2026-07-15", title: "Clôture de l'année scolaire", type: "end" },
+  { date: "2026-08-15", title: "Assomption", type: "holiday" },
+];
+
+const EVENT_STYLES: Record<AcademicEvent["type"], string> = {
+  exam: "bg-red-100 text-red-800 border-red-200",
+  holiday: "bg-amber-100 text-amber-800 border-amber-200",
+  start: "bg-green-100 text-green-800 border-green-200",
+  end: "bg-blue-100 text-blue-800 border-blue-200",
+  deadline: "bg-purple-100 text-purple-800 border-purple-200",
+};
+
+const EVENT_DOT: Record<AcademicEvent["type"], string> = {
+  exam: "bg-red-500",
+  holiday: "bg-amber-500",
+  start: "bg-green-500",
+  end: "bg-blue-500",
+  deadline: "bg-purple-500",
+};
+
+const EVENT_LABEL: Record<AcademicEvent["type"], string> = {
+  exam: "Examen",
+  holiday: "Congé",
+  start: "Début",
+  end: "Fin",
+  deadline: "Date limite",
+};
 
 const SUBJECT_COLORS: Record<string, string> = {
   Français: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
@@ -23,6 +81,16 @@ function getColor(subject: string) {
 
 function dateKey(y: number, m: number, d: number) {
   return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+}
+
+function getEventsForDate(key: string): AcademicEvent[] {
+  return ACADEMIC_EVENTS.filter(e => e.date === key);
+}
+
+function getEventsForMonth(y: number, m: number): AcademicEvent[] {
+  const prefix = `${y}-${String(m + 1).padStart(2, "0")}`;
+  return ACADEMIC_EVENTS.filter(e => e.date.startsWith(prefix))
+    .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 export default function CalendarPage() {
@@ -58,6 +126,9 @@ export default function CalendarPage() {
     .filter(([k]) => k.startsWith(`${year}-${String(month + 1).padStart(2, "0")}`))
     .reduce((acc, [, sessions]) => acc + sessions.reduce((a, s) => a + s.duration, 0), 0);
 
+  const monthEvents = getEventsForMonth(year, month);
+  const selectedEvents = selected ? getEventsForDate(selected) : [];
+
   const cells: (number | null)[] = [
     ...Array(startOffset).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
@@ -78,7 +149,7 @@ export default function CalendarPage() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-6">
               <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-muted transition-colors">
                 <ChevronLeft className="w-5 h-5" />
@@ -100,6 +171,7 @@ export default function CalendarPage() {
                 if (!day) return <div key={i} />;
                 const key = dateKey(year, month, day);
                 const sessions = data[key] ?? [];
+                const events = getEventsForDate(key);
                 const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
                 const isSelected = selected === key;
                 return (
@@ -118,7 +190,12 @@ export default function CalendarPage() {
                       {day}
                     </span>
                     <div className="flex flex-col gap-0.5 overflow-hidden">
-                      {sessions.slice(0, 2).map((s, si) => {
+                      {events.slice(0, 1).map((ev, ei) => (
+                        <span key={ei} className={`text-[9px] px-1 py-0.5 rounded font-bold truncate border ${EVENT_STYLES[ev.type]}`}>
+                          {ev.title.length > 14 ? ev.title.slice(0, 13) + "…" : ev.title}
+                        </span>
+                      ))}
+                      {sessions.slice(0, events.length >= 1 ? 1 : 2).map((s, si) => {
                         const c = courses.find((c) => c.id === s.courseId);
                         return (
                           <span key={si} className={`text-[10px] px-1.5 py-0.5 rounded font-medium truncate ${getColor(c?.subject ?? "")}`}>
@@ -126,7 +203,9 @@ export default function CalendarPage() {
                           </span>
                         );
                       })}
-                      {sessions.length > 2 && <span className="text-[10px] text-muted-foreground">+{sessions.length - 2}</span>}
+                      {sessions.length + events.length > 3 && (
+                        <span className="text-[10px] text-muted-foreground">+{sessions.length + events.length - 3}</span>
+                      )}
                     </div>
                   </button>
                 );
@@ -143,6 +222,38 @@ export default function CalendarPage() {
                 </p>
               </div>
             </div>
+
+            {monthEvents.length > 0 && (
+              <div className="mt-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Bell className="w-4 h-4 text-primary" />
+                  <h3 className="font-bold text-base">Événements scolaires — {MONTHS[month]}</h3>
+                </div>
+                <div className="space-y-2">
+                  {monthEvents.map((ev, i) => {
+                    const d = new Date(ev.date + "T12:00");
+                    const dayNum = d.getDate();
+                    return (
+                      <div key={i} className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm ${EVENT_STYLES[ev.type]}`}>
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${EVENT_DOT[ev.type]}`} />
+                        <span className="font-bold w-8 shrink-0">{dayNum}</span>
+                        <span className="flex-1 font-medium">{ev.title}</span>
+                        <span className="text-xs font-bold uppercase opacity-70 shrink-0">{EVENT_LABEL[ev.type]}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-3 text-xs">
+                  {(["exam", "holiday", "start", "end"] as const).map(type => (
+                    <div key={type} className="flex items-center gap-1.5">
+                      <span className={`w-2.5 h-2.5 rounded-full ${EVENT_DOT[type]}`} />
+                      <span className="text-muted-foreground">{EVENT_LABEL[type]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="w-full lg:w-80 shrink-0">
@@ -152,7 +263,25 @@ export default function CalendarPage() {
                   {new Date(selected + "T12:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
                 </h3>
 
+                {selectedEvents.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Événements officiels</p>
+                    {selectedEvents.map((ev, i) => (
+                      <div key={i} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm border ${EVENT_STYLES[ev.type]}`}>
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${EVENT_DOT[ev.type]}`} />
+                        <div className="flex-1">
+                          <p className="font-semibold">{ev.title}</p>
+                          <p className="text-xs opacity-70">{EVENT_LABEL[ev.type]}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="space-y-2">
+                  {selectedEvents.length > 0 && (
+                    <p className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Mes sessions</p>
+                  )}
                   {(data[selected] ?? []).length === 0 ? (
                     <p className="text-sm text-muted-foreground">{t.calendar.noSession}</p>
                   ) : (
@@ -207,9 +336,34 @@ export default function CalendarPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-muted/30 border border-dashed rounded-2xl p-8 text-center text-muted-foreground">
-                <Calendar className="w-8 h-8 mx-auto mb-3 opacity-40" />
-                <p className="text-sm">{t.calendar.clickDay}</p>
+              <div className="space-y-4">
+                <div className="bg-muted/30 border border-dashed rounded-2xl p-8 text-center text-muted-foreground">
+                  <Calendar className="w-8 h-8 mx-auto mb-3 opacity-40" />
+                  <p className="text-sm">{t.calendar.clickDay}</p>
+                </div>
+
+                <div className="bg-card border rounded-2xl p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Bell className="w-4 h-4 text-primary" />
+                    <p className="font-bold text-sm">Prochain événement</p>
+                  </div>
+                  {(() => {
+                    const todayStr = today.toISOString().split("T")[0];
+                    const next = ACADEMIC_EVENTS.find(e => e.date >= todayStr);
+                    if (!next) return <p className="text-sm text-muted-foreground">Aucun événement à venir.</p>;
+                    const d = new Date(next.date + "T12:00");
+                    const diffDays = Math.ceil((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                    return (
+                      <div className={`px-4 py-3 rounded-xl border text-sm ${EVENT_STYLES[next.type]}`}>
+                        <p className="font-bold">{next.title}</p>
+                        <p className="text-xs mt-1 opacity-80">
+                          {d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
+                          {diffDays === 0 ? " — Aujourd'hui !" : diffDays === 1 ? " — Demain" : ` — Dans ${diffDays} jours`}
+                        </p>
+                      </div>
+                    );
+                  })()}
+                </div>
               </div>
             )}
           </div>

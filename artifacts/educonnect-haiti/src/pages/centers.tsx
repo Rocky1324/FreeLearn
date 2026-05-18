@@ -1,6 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
 import { centers } from "@/data/centers";
-import { MapPin, Clock, Laptop, Wifi, Users, Building } from "lucide-react";
+import { MapPin, Clock, Laptop, Wifi, Users, Building, Phone, Info } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
 import centreImg from "@/assets/images/centre.png";
 
@@ -59,6 +59,20 @@ export default function Centers() {
                   <Clock className="w-5 h-5 text-muted-foreground shrink-0 mr-3 mt-0.5" />
                   <span className="text-sm font-medium">{center.hours}</span>
                 </div>
+                {center.phone && (
+                  <div className="flex items-center">
+                    <Phone className="w-5 h-5 text-muted-foreground shrink-0 mr-3" />
+                    <a href={`tel:${center.phone}`} className="text-sm font-medium text-primary hover:underline">
+                      {center.phone}
+                    </a>
+                  </div>
+                )}
+                {center.note && (
+                  <div className="flex items-start bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
+                    <Info className="w-4 h-4 text-amber-500 shrink-0 mr-2 mt-0.5" />
+                    <span className="text-xs text-amber-700">{center.note}</span>
+                  </div>
+                )}
                 
                 <div className="pt-4 mt-4 border-t">
                   <h4 className="text-xs uppercase font-bold text-muted-foreground mb-3 tracking-wider">{t.centers.equipment}</h4>

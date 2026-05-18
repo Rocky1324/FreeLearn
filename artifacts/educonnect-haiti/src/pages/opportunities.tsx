@@ -176,9 +176,22 @@ export default function Opportunities() {
                   </div>
 
                   <div className="pt-4 border-t flex flex-col gap-3">
-                    <Button className="w-full font-bold">
-                      {t.opportunities.apply} <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
+                    {opp.applyUrl ? (
+                      <Button className="w-full font-bold" asChild>
+                        <a href={opp.applyUrl} target="_blank" rel="noopener noreferrer">
+                          {t.opportunities.apply} <ArrowRight className="w-4 h-4 ml-2" />
+                        </a>
+                      </Button>
+                    ) : (
+                      <Button className="w-full font-bold" variant="secondary" disabled>
+                        {t.opportunities.apply}
+                      </Button>
+                    )}
+                    {opp.contact && (
+                      <p className="text-center text-sm text-muted-foreground">
+                        Contact : <span className="font-medium text-foreground">{opp.contact}</span>
+                      </p>
+                    )}
                   </div>
                 </DialogContent>
               </Dialog>

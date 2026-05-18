@@ -44,6 +44,7 @@ export const courses: Course[] = [
       {
         id: "c1",
         title: "Chapitre 1 — Les voyelles : A, E, I, O, U",
+        youtubeId: "sGtW4SQDzaI",
         youtubeSearch: "apprendre les voyelles maternelle CP lecture",
         summary:
           "Les voyelles sont les sons de base du français : A, E, I, O, U (et parfois Y). Chaque mot contient au moins une voyelle. Savoir les reconnaître permet de commencer à lire et à écrire.",
@@ -90,6 +91,7 @@ export const courses: Course[] = [
       {
         id: "c2",
         title: "Chapitre 2 — Former des syllabes simples",
+        youtubeId: "bvJSpFxLSfo",
         youtubeSearch: "former syllabes lecture CP ba be bi bo bu",
         summary:
           "Une syllabe est un groupe de sons qu'on prononce ensemble. La syllabe la plus simple est une consonne + une voyelle : MA, PA, LI, TO… En combinant des syllabes, on forme des mots : 'ma-man', 'pa-pa', 'li-vre'.",
@@ -136,6 +138,7 @@ export const courses: Course[] = [
       {
         id: "c3",
         title: "Chapitre 3 — Mes premiers mots",
+        youtubeId: "Xt8T1Kq_-yM",
         youtubeSearch: "lire premiers mots CP lecture apprendre",
         summary:
           "En assemblant des syllabes, on lit des mots entiers. Commence par les mots courts de 2 syllabes : MAMAN, PAPA, ÉCOLE, MAISON, LIVRE… Lis lentement puis de plus en plus vite jusqu'à reconnaître le mot d'un coup.",
@@ -188,6 +191,7 @@ export const courses: Course[] = [
       {
         id: "c1",
         title: "Chapitre 1 — Compter jusqu'à 100",
+        youtubeId: "0ZKrPlRPMPM",
         youtubeSearch: "compter jusqu'à 100 CE1 mathématiques apprendre",
         summary:
           "Les nombres de 0 à 100 s'organisent en unités (1 à 9), dizaines (10, 20, 30…) et centaine (100). Comprendre la valeur des chiffres selon leur position est fondamental : dans 47, le 4 vaut 4 dizaines (40) et le 7 vaut 7 unités.",
@@ -234,6 +238,7 @@ export const courses: Course[] = [
       {
         id: "c2",
         title: "Chapitre 2 — L'addition",
+        youtubeId: "acKONZKFBOE",
         youtubeSearch: "addition CE1 cours apprendre calcul simple",
         summary:
           "Additionner c'est réunir deux quantités ensemble. Le signe de l'addition est '+'. Résultat = somme. Pour additionner de grands nombres, on aligne les unités sous les unités et les dizaines sous les dizaines, puis on additionne colonne par colonne en commençant par la droite.",
@@ -279,6 +284,7 @@ export const courses: Course[] = [
       {
         id: "c3",
         title: "Chapitre 3 — La soustraction",
+        youtubeId: "ZtAzY4wWyM8",
         youtubeSearch: "soustraction CE1 cours apprendre calcul simple",
         summary:
           "Soustraire c'est enlever une quantité d'une autre. Le signe est '−'. Résultat = différence. On soustrait de droite à gauche. Si le chiffre du bas est plus grand que celui du haut, on emprunte à la dizaine voisine.",
@@ -336,6 +342,7 @@ export const courses: Course[] = [
       {
         id: "c1",
         title: "Chapitre 1 — Les êtres vivants et les êtres non-vivants",
+        youtubeId: "INPAwnNJq8E",
         youtubeSearch: "êtres vivants non vivants CE2 sciences cours",
         summary:
           "Un être vivant naît, se nourrit, grandit, se reproduit et meurt. Exemples : plante, animal, champignon, humain. Un objet non-vivant ne fait rien de tout cela. Exemples : pierre, voiture, eau, soleil.",
@@ -382,6 +389,7 @@ export const courses: Course[] = [
       {
         id: "c2",
         title: "Chapitre 2 — Les animaux : herbivores, carnivores, omnivores",
+        youtubeId: "mFHXkz6FiuY",
         youtubeSearch: "herbivore carnivore omnivore animaux cours primaire",
         summary:
           "On classe les animaux selon ce qu'ils mangent. Les herbivores mangent uniquement des plantes (vache, chèvre, lapin). Les carnivores mangent uniquement de la viande (lion, requin, aigle). Les omnivores mangent des plantes ET de la viande (cochon, ours, être humain).",
@@ -428,6 +436,7 @@ export const courses: Course[] = [
       {
         id: "c3",
         title: "Chapitre 3 — Les plantes : racine, tige, feuilles, fleurs, fruit",
+        youtubeId: "WJVmz2_1QAk",
         youtubeSearch: "parties d'une plante racine tige feuille fleur fruit cours",
         summary:
           "Une plante possède plusieurs parties ayant chacune un rôle. La racine fixe la plante au sol et absorbe l'eau. La tige transporte la sève. Les feuilles fabriquent la nourriture grâce au soleil (photosynthèse). La fleur attire les insectes pour la reproduction. Le fruit protège les graines.",
@@ -486,6 +495,7 @@ export const courses: Course[] = [
       {
         id: "c1",
         title: "Chapitre 1 — Haïti dans les Caraïbes",
+        youtubeId: "UezNtbMqFiA",
         youtubeSearch: "Haïti géographie Caraïbes situation île",
         summary:
           "Haïti est un pays insulaire situé dans la mer des Caraïbes. Il occupe la partie occidentale de l'île d'Hispaniola, dont la partie orientale est la République Dominicaine. Haïti est bordée au nord par l'océan Atlantique et au sud par la mer des Caraïbes.",
@@ -532,6 +542,7 @@ export const courses: Course[] = [
       {
         id: "c2",
         title: "Chapitre 2 — Les 10 départements d'Haïti",
+        youtubeId: "Tn9IVs2Nqgw",
         youtubeSearch: "départements d'Haïti géographie divisions administratives",
         summary:
           "Haïti est divisée en 10 départements, chacun avec un chef-lieu. Du nord au sud : Nord, Nord-Est, Nord-Ouest, Artibonite, Centre, Ouest, Nippes, Sud, Grand'Anse, Sud-Est. Le département de l'Ouest est le plus peuplé (Port-au-Prince).",
@@ -578,6 +589,7 @@ export const courses: Course[] = [
       {
         id: "c3",
         title: "Chapitre 3 — Les reliefs et les rivières d'Haïti",
+        youtubeId: "EQyEJY7sAFQ",
         youtubeSearch: "relief montagne rivière Haïti géographie physique",
         summary:
           "Haïti est un pays très montagneux : plus de 60% du territoire est montagneux. Le Pic la Selle (2 680 m) est le point culminant. Les principales rivières sont l'Artibonite (la plus longue), la Rivière du Massacre et la Rivière Péligre. La plaine de l'Artibonite est le principal grenier du pays.",
@@ -630,6 +642,7 @@ export const courses: Course[] = [
       {
         id: "c1",
         title: "Chapitre 1 — Les Taïnos, premiers habitants",
+        youtubeId: "l0bVCBpfGOk",
         youtubeSearch: "Taïnos premiers habitants Haïti Hispaniola histoire",
         summary:
           "Avant l'arrivée des Européens, l'île d'Hispaniola (appelée Ayiti ou Quisqueya par les autochtones) était peuplée par les Taïnos, un peuple amérindien. Ils vivaient de l'agriculture (manioc, maïs), de la pêche et de la chasse. Christophe Colomb arrive en 1492 et marque le début de la colonisation.",
@@ -676,6 +689,7 @@ export const courses: Course[] = [
       {
         id: "c2",
         title: "Chapitre 2 — L'esclavage et la traite négrière",
+        youtubeId: "HAuBvLEKYtA",
         youtubeSearch: "esclavage traite négrière Saint-Domingue Haïti histoire",
         summary:
           "Après l'extermination des Taïnos, les colonisateurs français ont importé des millions d'Africains réduits en esclavage pour travailler dans les plantations. Saint-Domingue (nom colonial d'Haïti) devint la colonie la plus riche du monde grâce au sucre, café et indigo produits par le travail forcé des esclaves.",
@@ -716,6 +730,7 @@ export const courses: Course[] = [
       {
         id: "c3",
         title: "Chapitre 3 — La Révolution haïtienne et l'indépendance (1791-1804)",
+        youtubeId: "g5CJvmyBdUE",
         youtubeSearch: "révolution haïtienne 1804 indépendance Toussaint Dessalines",
         summary:
           "La révolution éclate le 14 août 1791 avec la cérémonie du Bois-Caïman. Toussaint Louverture, Jean-Jacques Dessalines et Henri Christophe dirigent la lutte. Après avoir vaincu les armées françaises, anglaises et espagnoles, l'indépendance est proclamée le 1er janvier 1804 par Jean-Jacques Dessalines. Haïti devient la première République noire libre du monde.",
@@ -774,6 +789,7 @@ export const courses: Course[] = [
       {
         id: "c1",
         title: "Chapitre 1 — La phrase et ses constituants",
+        youtubeId: "KgPQ1tFBvKQ",
         youtubeSearch: "groupe nominal verbal phrase français CM2 grammaire",
         summary:
           "Une phrase simple est composée d'un Groupe Nominal (GN) qui dit 'de quoi on parle' (le sujet) et d'un Groupe Verbal (GV) qui dit 'ce qu'il fait ou est' (le prédicat). Exemple : 'Le chat (GN) mange du poisson (GV)'.",
@@ -814,6 +830,7 @@ export const courses: Course[] = [
       {
         id: "c2",
         title: "Chapitre 2 — Les classes grammaticales",
+        youtubeId: "g_gcJTlnv3I",
         youtubeSearch: "classes grammaticales nom verbe adjectif adverbe cours grammaire",
         summary:
           "Chaque mot appartient à une classe grammaticale. Les principales : nom (désigne un être ou une chose), verbe (exprime une action ou un état), adjectif qualificatif (décrit le nom), adverbe (modifie le verbe), article (détermine le nom), pronom (remplace le nom).",
@@ -860,6 +877,7 @@ export const courses: Course[] = [
       {
         id: "c3",
         title: "Chapitre 3 — La conjugaison au présent de l'indicatif",
+        youtubeId: "xXJI5FHM6_Y",
         youtubeSearch: "conjugaison présent indicatif verbes 1er 2e groupe cours",
         summary:
           "Au présent de l'indicatif, les verbes du 1er groupe (en -ER) se conjuguent avec les terminaisons : -e, -es, -e, -ons, -ez, -ent. Ex : 'je chante, tu chantes, il chante, nous chantons, vous chantez, ils chantent'. Les verbes du 2e groupe (en -IR) : -is, -is, -it, -issons, -issez, -issent.",
@@ -917,6 +935,7 @@ export const courses: Course[] = [
       {
         id: "c1",
         title: "Chapitre 1 — Les fractions",
+        youtubeId: "1T9DMQPB6C8",
         youtubeSearch: "fractions cours 5ème simplifier additionner soustraire",
         summary:
           "Une fraction a/b représente a parties sur b parties égales d'un tout. Le numérateur (a) est en haut, le dénominateur (b) est en bas. Pour additionner deux fractions, on les ramène au même dénominateur (PPCM). Pour multiplier, on multiplie numérateurs entre eux et dénominateurs entre eux.",
@@ -968,6 +987,7 @@ export const courses: Course[] = [
       {
         id: "c2",
         title: "Chapitre 2 — Les pourcentages",
+        youtubeId: "WDlhFqBGLKs",
         youtubeSearch: "pourcentages cours 5ème calcul problèmes",
         summary:
           "Un pourcentage exprime une fraction de 100. x% = x/100. Pour calculer x% d'une valeur N : on fait N × x/100. Exemple : 20% de 500 = 500 × 20/100 = 100. Les pourcentages s'utilisent partout : réductions en magasin, notes scolaires, taux d'intérêt…",
@@ -1019,6 +1039,7 @@ export const courses: Course[] = [
       {
         id: "c3",
         title: "Chapitre 3 — La proportionnalité",
+        youtubeId: "BLKo7XBRGUE",
         youtubeSearch: "proportionnalité tableau cours 5ème règle de trois",
         summary:
           "Deux grandeurs sont proportionnelles si leur rapport est constant (coefficient de proportionnalité). On utilise la règle de trois (produit en croix) pour trouver un terme manquant. Exemples concrets : recette de cuisine, vitesse/distance, conversions de monnaie.",
@@ -1076,6 +1097,7 @@ export const courses: Course[] = [
       {
         id: "c1",
         title: "Chapitre 1 — Les forces et leurs effets",
+        youtubeId: "GHqHvMQ8VIA",
         youtubeSearch: "forces physique cours 4ème poids poussée frottement",
         summary:
           "Une force est une action exercée sur un objet qui peut le mettre en mouvement, l'arrêter ou déformer sa forme. Les forces courantes : le poids (attraction terrestre), la réaction du support (normale), le frottement, la poussée d'Archimède. Une force est caractérisée par son point d'application, sa direction, son sens et son intensité (en Newton).",
@@ -1122,6 +1144,7 @@ export const courses: Course[] = [
       {
         id: "c2",
         title: "Chapitre 2 — Les états de la matière et les changements",
+        youtubeId: "e7hnqmXVEIU",
         youtubeSearch: "états matière solide liquide gaz changements physique cours",
         summary:
           "La matière existe en trois états : solide (forme fixe, volume fixe), liquide (forme variable, volume fixe) et gazeux (forme et volume variables). Les changements d'état : fusion (solide→liquide), solidification (liquide→solide), vaporisation (liquide→gaz), condensation (gaz→liquide), sublimation (solide→gaz).",
@@ -1168,6 +1191,7 @@ export const courses: Course[] = [
       {
         id: "c3",
         title: "Chapitre 3 — L'électricité : circuit simple",
+        youtubeId: "mc979OhitAg",
         youtubeSearch: "circuit électrique simple pile ampoule cours physique",
         summary:
           "Un circuit électrique simple comprend une source d'énergie (pile), des conducteurs (fils), un récepteur (ampoule) et souvent un interrupteur. Le courant électrique circule du pôle + de la pile vers le pôle −. Les composants en série partagent le même courant. En parallèle, ils partagent la même tension.",
@@ -1285,6 +1309,7 @@ export const courses: Course[] = [
       {
         id: "c2",
         title: "Chapitre 2 — Les inéquations du premier degré",
+        youtubeId: "l3XzepN03KQ",
         youtubeSearch: "inéquation premier degré cours collège",
         summary:
           "Une inéquation est une inégalité (avec <, >, ≤, ≥) contenant une inconnue. Les règles sont presque les mêmes que pour les équations, sauf qu'il faut INVERSER le sens du signe quand on multiplie ou divise par un nombre négatif.",
@@ -1400,6 +1425,7 @@ export const courses: Course[] = [
       {
         id: "c4",
         title: "Chapitre 4 — Le théorème de Thalès",
+        youtubeId: "8OM5BEVm-0g",
         youtubeSearch: "théorème de Thalès explication simple",
         summary:
           "Quand deux droites parallèles coupent deux droites sécantes, elles déterminent des segments proportionnels. C'est l'outil principal pour calculer des longueurs dans des configurations de triangles imbriqués.",
@@ -1458,6 +1484,7 @@ export const courses: Course[] = [
       {
         id: "c1",
         title: "Chapitre 1 — Notion de fonction",
+        youtubeId: "t8g_KQHTS8U",
         youtubeSearch: "notion de fonction seconde mathématiques cours image antécédent",
         summary:
           "Une fonction f associe à tout réel x (du domaine de définition) un unique réel f(x) (image). On note y = f(x). L'image de x par f est f(x). L'antécédent de y est la valeur x telle que f(x) = y. La représentation graphique d'une fonction est sa courbe dans un repère.",
@@ -1504,6 +1531,7 @@ export const courses: Course[] = [
       {
         id: "c2",
         title: "Chapitre 2 — La fonction affine y = ax + b",
+        youtubeId: "jURotGHzBJE",
         youtubeSearch: "fonction affine droite ax+b cours seconde coefficient directeur",
         summary:
           "Une fonction affine a la forme f(x) = ax + b. Sa représentation graphique est une droite. 'a' est le coefficient directeur (pente) : si a > 0 la droite monte, si a < 0 elle descend. 'b' est l'ordonnée à l'origine (où la droite coupe l'axe des y).",
@@ -1550,6 +1578,7 @@ export const courses: Course[] = [
       {
         id: "c3",
         title: "Chapitre 3 — Statistiques descriptives",
+        youtubeId: "mk8tOD0t8M0",
         youtubeSearch: "statistiques descriptives moyenne médiane mode cours seconde",
         summary:
           "Les statistiques permettent d'analyser des données. Les mesures de tendance centrale : moyenne (somme/effectif), médiane (valeur centrale quand on trie), mode (valeur la plus fréquente). Les mesures de dispersion : étendue (max − min), variance, écart-type.",
@@ -1608,6 +1637,7 @@ export const courses: Course[] = [
       {
         id: "c1",
         title: "Chapitre 1 — La dissertation littéraire",
+        youtubeId: "eMnxkRnkNq4",
         youtubeSearch: "dissertation littéraire méthode plan introduction développement conclusion",
         summary:
           "La dissertation est un exercice de réflexion organisée sur un sujet donné. Elle comprend une introduction (accroche, présentation du sujet, problématique, annonce du plan), un développement (2 ou 3 parties avec arguments et exemples) et une conclusion (bilan, ouverture). Le plan dialectique (thèse/antithèse/synthèse) est le plus courant.",
@@ -1659,6 +1689,7 @@ export const courses: Course[] = [
       {
         id: "c2",
         title: "Chapitre 2 — L'analyse de texte",
+        youtubeId: "cWdYzVqSSM0",
         youtubeSearch: "analyse de texte littéraire méthode commentaire composé lycée",
         summary:
           "L'analyse de texte (commentaire composé) consiste à étudier un texte littéraire selon un plan organisé. On identifie le genre, le registre, les procédés stylistiques (métaphore, antithèse, hyperbole, anaphore…) et on interprète leur effet sur le lecteur.",
@@ -1705,6 +1736,7 @@ export const courses: Course[] = [
       {
         id: "c3",
         title: "Chapitre 3 — La philosophie et la pensée critique",
+        youtubeId: "BjdME9J5apU",
         youtubeSearch: "introduction philosophie lycée conscience liberté bonheur cours",
         summary:
           "La philosophie questionne les grandes notions de l'existence humaine : la liberté, la conscience, le bonheur, la justice, le temps, la raison. Elle invite à ne jamais accepter une idée sans l'examiner. Philosopher c'est remettre en question l'évidence et chercher des définitions rigoureuses.",
@@ -1815,6 +1847,7 @@ export const courses: Course[] = [
       {
         id: "c2",
         title: "Chapitre 2 — Jacques Roumain et 'Gouverneurs de la rosée'",
+        youtubeId: "lRLgHhLCKpU",
         youtubeSearch: "Gouverneurs de la rosée Jacques Roumain résumé analyse",
         summary:
           "Publié en 1944 (à titre posthume), 'Gouverneurs de la rosée' raconte le retour de Manuel à Fonds-Rouge, son village ravagé par la sécheresse et divisé par une vendetta. Manuel découvre une source d'eau et tente de réconcilier les habitants pour la conduire au village. C'est un roman engagé sur la solidarité paysanne.",
@@ -1872,6 +1905,7 @@ export const courses: Course[] = [
       {
         id: "c3",
         title: "Chapitre 3 — Le réalisme merveilleux et Jacques-Stephen Alexis",
+        youtubeId: "5f6pxTluqD8",
         youtubeSearch: "réalisme merveilleux Jacques Stephen Alexis Haïti",
         summary:
           "Le réalisme merveilleux est une esthétique théorisée par Jacques-Stephen Alexis en 1956. Il mêle réalité quotidienne haïtienne et merveilleux populaire (vodou, légendes, oralité). Œuvres clés : 'Compère Général Soleil', 'Les Arbres musiciens', 'L'Espace d'un cillement'.",
@@ -1930,6 +1964,7 @@ export const courses: Course[] = [
       {
         id: "c1",
         title: "Chapitre 1 — La structure de l'atome",
+        youtubeId: "CKBcBBm4kHI",
         youtubeSearch: "structure atome proton neutron électron cours lycée chimie",
         summary:
           "Un atome est constitué d'un noyau (protons + neutrons) entouré d'électrons. Le numéro atomique Z = nombre de protons = nombre d'électrons (atome neutre). La masse atomique A = protons + neutrons. Les électrons sont répartis en couches (K, L, M) selon les règles de remplissage.",
@@ -1976,6 +2011,7 @@ export const courses: Course[] = [
       {
         id: "c2",
         title: "Chapitre 2 — Les liaisons chimiques",
+        youtubeId: "axLcMLBQG5E",
         youtubeSearch: "liaisons chimiques ionique covalente cours lycée chimie",
         summary:
           "Les atomes se lient pour atteindre une configuration stable (règle de l'octet). Liaison covalente : partage d'électrons entre non-métaux (ex : H₂O, CO₂). Liaison ionique : transfert d'électrons entre métal et non-métal, formant des ions + et − attirés (ex : NaCl). Liaison métallique : pool d'électrons dans les métaux.",
@@ -2027,6 +2063,7 @@ export const courses: Course[] = [
       {
         id: "c3",
         title: "Chapitre 3 — Les réactions chimiques",
+        youtubeId: "mq-Ggx5s5uc",
         youtubeSearch: "équilibrer réaction chimique cours lycée bilan équation",
         summary:
           "Une réaction chimique transforme des réactifs en produits. Elle se représente par une équation bilan. La loi de conservation de la masse (Lavoisier) : 'Rien ne se crée, rien ne se perd, tout se transforme'. Pour équilibrer une équation, on ajuste les coefficients stœchiométriques pour que le nombre d'atomes de chaque élément soit identique de chaque côté.",
@@ -2143,6 +2180,7 @@ export const courses: Course[] = [
       {
         id: "c2",
         title: "Chapitre 2 — Les organites cellulaires",
+        youtubeId: "OfuFAFbRbqk",
         youtubeSearch: "organites cellulaires cours lycée biologie",
         summary:
           "Une cellule eucaryote contient plusieurs organites, chacun avec une fonction spécifique : noyau (ADN), mitochondrie (énergie/ATP), réticulum endoplasmique (synthèse), appareil de Golgi (tri/expédition), lysosomes (digestion), ribosomes (traduction des protéines).",
@@ -2200,6 +2238,7 @@ export const courses: Course[] = [
       {
         id: "c3",
         title: "Chapitre 3 — La division cellulaire (mitose)",
+        youtubeId: "VlN7K1-9QB0",
         youtubeSearch: "mitose division cellulaire cours simple",
         summary:
           "La mitose est la division d'une cellule mère en deux cellules filles génétiquement identiques. Elle comprend 4 phases : prophase (condensation des chromosomes), métaphase (alignement à l'équateur), anaphase (séparation), télophase (formation de deux noyaux).",
