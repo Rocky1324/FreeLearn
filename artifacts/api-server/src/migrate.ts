@@ -22,6 +22,12 @@ export async function runMigrations(): Promise<void> {
         ADD COLUMN IF NOT EXISTS google_token_expiry TIMESTAMP,
         ADD COLUMN IF NOT EXISTS google_picture TEXT;
     `);
+
+    await client.query(`
+      ALTER TABLE users
+        ALTER COLUMN password_hash DROP NOT NULL;
+    `);
+
     console.log("[migrate] Schema up to date.");
   } catch (err) {
     console.error("[migrate] Migration failed:", err);
