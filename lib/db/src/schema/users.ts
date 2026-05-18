@@ -6,9 +6,14 @@ export const usersTable = pgTable("users", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
   displayName: text("display_name").notNull(),
-  passwordHash: text("password_hash").notNull(),
+  passwordHash: text("password_hash"),
   role: userRoleEnum("role").notNull().default("student"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  googleId: text("google_id").unique(),
+  googleAccessToken: text("google_access_token"),
+  googleRefreshToken: text("google_refresh_token"),
+  googleTokenExpiry: timestamp("google_token_expiry"),
+  googlePicture: text("google_picture"),
 });
 
 export type User = typeof usersTable.$inferSelect;

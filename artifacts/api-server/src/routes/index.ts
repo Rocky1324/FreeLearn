@@ -1,6 +1,9 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import authRouter from "./auth";
+import googleAuthRouter from "./google-auth";
+import googleCalendarRouter from "./google-calendar";
+import googleDriveRouter from "./google-drive";
 import progressRouter from "./progress";
 import teacherRouter from "./teacher";
 import dashboardRouter from "./dashboard";
@@ -10,6 +13,9 @@ const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use("/auth", authRouter);
+router.use("/auth", googleAuthRouter);
+router.use("/google/calendar", googleCalendarRouter);
+router.use("/google/drive", googleDriveRouter);
 router.use("/progress", progressRouter);
 router.use("/teacher/videos", teacherRouter);
 router.use("/dashboard", dashboardRouter);

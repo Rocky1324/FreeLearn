@@ -120,8 +120,14 @@ router.post("/login", authLimiter, async (req, res) => {
 
     const user = rows[0];
     const dummyHash = "$2a$12$dummyhashfortimingattackprevention.aaaaaaaaaaaaa";
+
+    if (user && !user.passwordHash) {
+      res.status(401).json({ error: "Ce compte utilise la connexion Google. Veuillez vous connecter avec Google." });
+      return;
+    }
+
     const valid = user
-      ? await bcrypt.compare(password, user.passwordHash)
+      ? await bcrypt.compare(password, user.passwordHash!)
       : await bcrypt.compare(password, dummyHash);
 
     if (!user || !valid) {
