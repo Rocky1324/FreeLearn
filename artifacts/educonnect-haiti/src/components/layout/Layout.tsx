@@ -17,6 +17,9 @@ import {
   GraduationCap,
   MessageSquare,
   ChevronRight,
+  Trash2,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -32,12 +35,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [showReconnected, setShowReconnected] = useState(false);
   const [wasOffline, setWasOffline] = useState(false);
   const [lowConnexion, setLowConnexion] = useLocalStorage("connexion-faible", false);
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const { theme, toggle: toggleTheme } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, deleteAccount } = useAuth();
   const { t, toggle: toggleLang } = useLanguage();
   const isOnline = useOnlineStatus();
   const moreMenuRef = useRef<HTMLDivElement>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -91,8 +96,61 @@ export function Layout({ children }: { children: React.ReactNode }) {
     await logout();
   };
 
+  const handleDeleteAccount = async () => {
+    setDeleteLoading(true);
+    try {
+      await deleteAccount();
+      setShowDeleteConfirm(false);
+      navigate("/bienvenue");
+    } catch {
+      setDeleteLoading(false);
+    }
+  };
+
   return (
     <div className={`min-h-screen flex flex-col ${lowConnexion ? "connexion-faible" : ""}`}>
+
+      {/* Delete account confirmation dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !deleteLoading && setShowDeleteConfirm(false)} />
+          <div className="relative bg-card border rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
+              </div>
+              <div>
+                <h2 className="font-bold text-lg">Supprimer mon compte</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Cette action est <strong>irréversible</strong>. Toute votre progression, vos données et votre historique seront définitivement supprimés.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-2.5 rounded-lg border text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {deleteLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                {deleteLoading ? "Suppression..." : "Oui, supprimer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between mx-auto px-4">
           <Link href="/" className="flex items-center space-x-2 shrink-0">
@@ -221,12 +279,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
                           {t.nav.teacherSpace}
                         </Link>
                       )}
+                      <div className="border-t my-1" />
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors text-destructive"
                       >
                         <LogOut className="w-4 h-4" />
                         {t.nav.logout}
+                      </button>
+                      <button
+                        onClick={() => { setUserMenuOpen(false); setShowDeleteConfirm(true); }}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Supprimer mon compte
                       </button>
                     </div>
                   </>
@@ -281,6 +347,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   >
                     <LogOut className="w-4 h-4" />
                     {t.nav.logout} ({user.displayName.split(" ")[0]})
+                  </button>
+                  <button
+                    onClick={() => { setIsMenuOpen(false); setShowDeleteConfirm(true); }}
+                    className="w-full flex items-center gap-2 py-2 px-3 rounded-lg text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-muted transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Supprimer mon compte
                   </button>
                 </div>
               )}

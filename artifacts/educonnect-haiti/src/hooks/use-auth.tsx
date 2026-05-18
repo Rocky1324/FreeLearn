@@ -25,6 +25,7 @@ interface AuthContextType {
     teacherCode?: string,
   ) => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -82,8 +83,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("educonnect_user");
   };
 
+  const deleteAccount = async () => {
+    await api.del("/api/auth/account");
+    setUser(null);
+    localStorage.removeItem("educonnect_user");
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );

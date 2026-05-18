@@ -169,6 +169,45 @@ router.post("/logout", async (req, res) => {
   res.json({ ok: true });
 });
 
+router.delete("/account", async (req, res) => {
+  const token = (req as any).cookies?.session as string | undefined;
+  if (!token) {
+    res.status(401).json({ error: "Non connecté." });
+    return;
+  }
+
+  const now = new Date();
+  try {
+    const rows = await db
+      .select({ userId: sessionsTable.userId })
+      .from(sessionsTable)
+      .where(
+        and(
+          eq(sessionsTable.tokenHash, hashToken(token)),
+          gt(sessionsTable.expiresAt, now),
+        ),
+      )
+      .limit(1);
+
+    if (!rows.length) {
+      res.clearCookie("session", { path: "/" });
+      res.status(401).json({ error: "Session expirée." });
+      return;
+    }
+
+    const { userId } = rows[0];
+
+    // Cascade delete: sessions, progress, forum_posts, teacher_videos all have onDelete: cascade
+    await db.delete(usersTable).where(eq(usersTable.id, userId));
+
+    res.clearCookie("session", { path: "/" });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Erreur suppression compte:", err);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
 router.get("/me", async (req, res) => {
   const token = (req as any).cookies?.session as string | undefined;
   if (!token) {
