@@ -60,6 +60,8 @@ router.get("/google", (req, res) => {
       "openid",
       "email",
       "profile",
+      "https://www.googleapis.com/auth/calendar.events",
+      "https://www.googleapis.com/auth/drive.file",
     ],
   });
   res.redirect(url);

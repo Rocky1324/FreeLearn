@@ -8,6 +8,15 @@ import { Readable } from "node:stream";
 
 const router = Router();
 
+function isInsufficientScopes(err: any): boolean {
+  return (
+    err?.code === 403 ||
+    err?.status === 403 ||
+    err?.cause?.status === "PERMISSION_DENIED" ||
+    String(err?.cause?.message ?? err?.message ?? "").includes("insufficient authentication scopes")
+  );
+}
+
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || "https://defa549e-2586-4031-94db-f31ae1bbfd87-00-v5fr9q0zbzr3.picard.replit.dev/api/auth/google/callback";
@@ -112,6 +121,10 @@ router.post("/upload-url", requireAuth, async (req: Request, res: Response) => {
 
     res.json({ ok: true, file: { id: file.id, name: file.name, webViewLink: file.webViewLink } });
   } catch (err) {
+    if (isInsufficientScopes(err)) {
+      res.status(403).json({ error: "google_not_connected" });
+      return;
+    }
     console.error("Drive upload error:", err);
     res.status(500).json({ error: "Erreur lors de l'envoi vers Google Drive." });
   }
@@ -159,6 +172,10 @@ router.post("/upload-blob", requireAuth, async (req: Request, res: Response) => 
 
     res.json({ ok: true, file: { id: file.id, name: file.name, webViewLink: file.webViewLink } });
   } catch (err) {
+    if (isInsufficientScopes(err)) {
+      res.status(403).json({ error: "google_not_connected" });
+      return;
+    }
     console.error("Drive blob upload error:", err);
     res.status(500).json({ error: "Erreur lors de l'envoi vers Google Drive." });
   }

@@ -7,6 +7,15 @@ import { requireAuth, AuthRequest } from "../middleware/require-auth";
 
 const router = Router();
 
+function isInsufficientScopes(err: any): boolean {
+  return (
+    err?.code === 403 ||
+    err?.status === 403 ||
+    err?.cause?.status === "PERMISSION_DENIED" ||
+    String(err?.cause?.message ?? err?.message ?? "").includes("insufficient authentication scopes")
+  );
+}
+
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || "https://defa549e-2586-4031-94db-f31ae1bbfd87-00-v5fr9q0zbzr3.picard.replit.dev/api/auth/google/callback";
@@ -64,6 +73,10 @@ router.get("/events", requireAuth, async (req: Request, res: Response) => {
     });
     res.json({ events: data.items ?? [] });
   } catch (err) {
+    if (isInsufficientScopes(err)) {
+      res.status(403).json({ error: "google_not_connected" });
+      return;
+    }
     console.error("Calendar events error:", err);
     res.status(500).json({ error: "Erreur lors de la récupération des événements." });
   }
@@ -102,6 +115,10 @@ router.post("/events", requireAuth, async (req: Request, res: Response) => {
     const { data } = await calendar.events.insert({ calendarId: "primary", requestBody: event });
     res.json({ event: data });
   } catch (err) {
+    if (isInsufficientScopes(err)) {
+      res.status(403).json({ error: "google_not_connected" });
+      return;
+    }
     console.error("Calendar create event error:", err);
     res.status(500).json({ error: "Erreur lors de la création de l'événement." });
   }
@@ -141,6 +158,10 @@ router.post("/sync-academic", requireAuth, async (req: Request, res: Response) =
 
     res.json({ synced: results.length, ok: true });
   } catch (err) {
+    if (isInsufficientScopes(err)) {
+      res.status(403).json({ error: "google_not_connected" });
+      return;
+    }
     console.error("Calendar sync error:", err);
     res.status(500).json({ error: "Erreur lors de la synchronisation." });
   }
@@ -160,6 +181,10 @@ router.delete("/events/:eventId", requireAuth, async (req: Request, res: Respons
     await calendar.events.delete({ calendarId: "primary", eventId });
     res.json({ ok: true });
   } catch (err) {
+    if (isInsufficientScopes(err)) {
+      res.status(403).json({ error: "google_not_connected" });
+      return;
+    }
     console.error("Calendar delete event error:", err);
     res.status(500).json({ error: "Erreur lors de la suppression." });
   }
