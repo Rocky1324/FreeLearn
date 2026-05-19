@@ -261,8 +261,14 @@ export default function CalendarPage() {
 
   const getGoogleEventsForDate = (key: string): GoogleCalendarEvent[] => {
     return googleEvents.filter(ev => {
-      const d = ev.start?.date || ev.start?.dateTime?.split("T")[0];
-      return d === key;
+      if (ev.start?.date) return ev.start.date === key;
+      if (ev.start?.dateTime) {
+        // Prendre en compte le fuseau horaire local pour éviter le décalage
+        const d = new Date(ev.start.dateTime);
+        const localDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        return localDateStr === key;
+      }
+      return false;
     });
   };
 
@@ -281,8 +287,13 @@ export default function CalendarPage() {
         selected,
         selected,
       );
+      toast.success(`Session "${subject}" ajoutée à l'agenda et à Google Calendar !`);
+      
+      // Mettre à jour les événements affichés
+      const updated = await fetchGoogleEvents();
+      setGoogleEvents(updated);
     } catch {
-      // silently ignore — Google not connected
+      toast.success(`Session "${subject}" ajoutée à l'agenda (Google Calendar non connecté).`);
     }
   };
 
@@ -320,9 +331,24 @@ export default function CalendarPage() {
 
   const handleSyncAllToGoogle = async () => {
     const todayStr = today.toISOString().split("T")[0];
-    const futureEvents = ACADEMIC_EVENTS.filter(e => e.date >= todayStr);
+    
+    // 1. Les événements officiels à venir
+    const futureAcademic = ACADEMIC_EVENTS.filter(e => e.date >= todayStr);
+    
+    // 2. Les sessions planifiées par l'utilisateur à venir
+    const futureSessions: { date: string; title: string; type: string }[] = [];
+    Object.entries(data).forEach(([dateKey, sessions]) => {
+      if (dateKey >= todayStr) {
+        sessions.forEach(s => {
+          futureSessions.push({ date: dateKey, title: `Révision : ${s.subject} (${s.duration}min)`, type: "session" });
+        });
+      }
+    });
+
+    const allEventsToSync = [...futureAcademic, ...futureSessions];
+
     try {
-      await syncAcademicEvents(futureEvents);
+      await syncAcademicEvents(allEventsToSync);
       const updated = await fetchGoogleEvents();
       setGoogleEvents(updated);
     } catch {

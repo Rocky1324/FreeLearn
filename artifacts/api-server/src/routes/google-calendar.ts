@@ -16,6 +16,13 @@ function isInsufficientScopes(err: any): boolean {
   );
 }
 
+// Fonction utilitaire pour ajouter un jour à une date YYYY-MM-DD
+function getNextDayStr(dateStr: string) {
+  const d = new Date(dateStr + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().split("T")[0];
+}
+
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || "https://defa549e-2586-4031-94db-f31ae1bbfd87-00-v5fr9q0zbzr3.picard.replit.dev/api/auth/google/callback";
@@ -64,10 +71,16 @@ router.get("/events", requireAuth, async (req: Request, res: Response) => {
       return;
     }
     const calendar = google.calendar({ version: "v3", auth });
+    
+    // Au lieu de new Date() qui donne maintenant, on commence au début du mois
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
     const { data } = await calendar.events.list({
       calendarId: "primary",
-      timeMin: new Date().toISOString(),
-      maxResults: 50,
+      timeMin: startOfMonth.toISOString(),
+      maxResults: 100,
       singleEvents: true,
       orderBy: "startTime",
     });
@@ -106,7 +119,7 @@ router.post("/events", requireAuth, async (req: Request, res: Response) => {
 
     if (allDay) {
       event.start = { date: startDate };
-      event.end = { date: endDate ?? startDate };
+      event.end = { date: endDate ? getNextDayStr(endDate) : getNextDayStr(startDate) };
     } else {
       event.start = { dateTime: startDate, timeZone: "America/Port-au-Prince" };
       event.end = { dateTime: endDate ?? startDate, timeZone: "America/Port-au-Prince" };
@@ -147,10 +160,10 @@ router.post("/sync-academic", requireAuth, async (req: Request, res: Response) =
         calendarId: "primary",
         requestBody: {
           summary: `[FreeLearn] ${ev.title}`,
-          description: `Événement académique FreeLearn Haiti`,
+          description: ev.type === "session" ? `Session d'étude planifiée depuis FreeLearn` : `Événement académique FreeLearn Haiti`,
           start: { date: ev.date },
-          end: { date: ev.date },
-          colorId: ev.type === "exam" ? "11" : ev.type === "holiday" ? "5" : "2",
+          end: { date: getNextDayStr(ev.date) },
+          colorId: ev.type === "exam" ? "11" : ev.type === "holiday" ? "5" : ev.type === "session" ? "9" : "2",
         },
       });
       results.push(data);
