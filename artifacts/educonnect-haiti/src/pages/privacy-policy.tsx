@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { GraduationCap, ArrowLeft, Shield, Eye, Database, Share2, Lock, Mail, Trash2, RefreshCw, Ban } from "lucide-react";
 
-const LAST_UPDATED = "22 mai 2026";
+const LAST_UPDATED = "27 mai 2026";
 const CONTACT_EMAIL = "freelearn.haiti@gmail.com";
 const APP_NAME = "FreeLearn";
 const APP_URL = "https://educonnect-frontend-vqa9.onrender.com";
@@ -151,7 +151,7 @@ export default function PrivacyPolicy() {
             </li>
             <li>
               <strong>Google Calendar</strong>{" "}
-              (<code className="text-xs bg-muted px-1 py-0.5 rounded">https://www.googleapis.com/auth/calendar</code>)
+              (<code className="text-xs bg-muted px-1 py-0.5 rounded">https://www.googleapis.com/auth/calendar.events</code>)
               {" "}— Pour créer des événements académiques (rentrée, examens, vacances) dans votre agenda Google.
               Nous créons uniquement des événements à votre demande. Nous ne lisons pas, ne modifions pas
               et ne supprimons pas vos événements existants.
