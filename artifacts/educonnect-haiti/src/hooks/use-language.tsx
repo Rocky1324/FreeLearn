@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useCallback } from "react";
-import { fr, ht, type Translations } from "@/i18n";
+import { fr, ht, es, type Translations } from "@/i18n";
 
-type Lang = "fr" | "ht";
+type Lang = "fr" | "ht" | "es";
 
 interface LanguageContextValue {
   lang: Lang;
@@ -17,7 +17,7 @@ const STORAGE_KEY = "freelearn-lang";
 function getInitialLang(): Lang {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === "ht" || stored === "fr") return stored;
+    if (stored === "ht" || stored === "fr" || stored === "es") return stored;
   } catch {}
   return "fr";
 }
@@ -31,10 +31,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggle = useCallback(() => {
-    setLang(lang === "fr" ? "ht" : "fr");
+    setLang(lang === "fr" ? "ht" : lang === "ht" ? "es" : "fr");
   }, [lang, setLang]);
 
-  const t: Translations = lang === "ht" ? ht : fr;
+  const t: Translations = lang === "ht" ? ht : lang === "es" ? es : fr;
 
   return (
     <LanguageContext.Provider value={{ lang, t, toggle, setLang }}>

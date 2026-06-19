@@ -16,6 +16,7 @@ export type Translations = {
     orientation: string; opportunities: string; schools: string; centers: string;
     forum: string; teacher: string; dashboard: string; teacherSpace: string; logout: string;
     annales: string;
+    offlineSpace: string;
   };
   footer: {
     tagline: string; zones: string; resources: string; courseCatalog: string;

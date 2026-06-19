@@ -79,7 +79,7 @@ export default function Dashboard() {
     );
   }
 
-  const locale = lang === "ht" ? "fr-HT" : "fr-HT";
+  const locale = lang === "ht" ? "fr-HT" : lang === "es" ? "es-ES" : "fr-FR";
 
   return (
     <Layout>

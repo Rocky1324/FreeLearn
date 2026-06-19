@@ -75,6 +75,12 @@ function timeAgo(dateStr: string, lang: string): string {
     if (hours < 24) return `${hours}h de sa`;
     return `${days} jou de sa`;
   }
+  if (lang === "es") {
+    if (mins < 1) return "ahora mismo";
+    if (mins < 60) return `hace ${mins} min`;
+    if (hours < 24) return `hace ${hours}h`;
+    return `hace ${days} días`;
+  }
   if (mins < 1) return "à l'instant";
   if (mins < 60) return `il y a ${mins} min`;
   if (hours < 24) return `il y a ${hours}h`;

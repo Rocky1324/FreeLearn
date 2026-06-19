@@ -32,13 +32,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [showReconnected, setShowReconnected] = useState(false);
   const [wasOffline, setWasOffline] = useState(false);
   const [lowConnexion, setLowConnexion] = useLocalStorage("connexion-faible", false);
   const [location, navigate] = useLocation();
   const { theme, toggle: toggleTheme } = useTheme();
   const { user, logout, deleteAccount } = useAuth();
-  const { t, toggle: toggleLang } = useLanguage();
+  const { t, lang, setLang } = useLanguage();
   const isOnline = useOnlineStatus();
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -55,18 +56,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    let timer: NodeJS.Timeout | undefined;
     if (!isOnline) {
       setWasOffline(true);
       setShowReconnected(false);
     } else if (wasOffline) {
       setShowReconnected(true);
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         setShowReconnected(false);
         setWasOffline(false);
       }, 3000);
-      return () => clearTimeout(timer);
     }
-  }, [isOnline]);
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isOnline, wasOffline]);
 
   const primaryLinks = [
     { href: "/", label: t.nav.home },
@@ -207,14 +211,42 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="flex items-center space-x-1">
-            {/* Language toggle */}
-            <button
-              onClick={toggleLang}
-              className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-muted transition-colors text-xs font-semibold text-muted-foreground hover:text-foreground border border-transparent hover:border-border"
-              title="Changer de langue / Chanje lang"
-            >
-              {t.langToggle}
-            </button>
+            {/* Language selector dropdown */}
+            <div className="relative hidden sm:block">
+              <button
+                onClick={() => setLangMenuOpen((v) => !v)}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-muted transition-colors text-xs font-semibold text-muted-foreground hover:text-foreground border border-transparent hover:border-border"
+                title="Changer de langue / Select language"
+              >
+                🌐 {lang === "fr" ? "Français" : lang === "ht" ? "Kreyòl" : "Español"}
+                <ChevronDown className="w-3 h-3 text-muted-foreground" />
+              </button>
+              {langMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setLangMenuOpen(false)} />
+                  <div className="absolute right-0 top-full mt-1.5 w-32 bg-card border rounded-xl shadow-lg z-40 py-1 overflow-hidden">
+                    <button
+                      onClick={() => { setLang("fr"); setLangMenuOpen(false); }}
+                      className={`w-full text-left px-4 py-2 text-xs transition-colors hover:bg-muted ${lang === "fr" ? "text-primary font-bold" : ""}`}
+                    >
+                      Français
+                    </button>
+                    <button
+                      onClick={() => { setLang("ht"); setLangMenuOpen(false); }}
+                      className={`w-full text-left px-4 py-2 text-xs transition-colors hover:bg-muted ${lang === "ht" ? "text-primary font-bold" : ""}`}
+                    >
+                      Kreyòl
+                    </button>
+                    <button
+                      onClick={() => { setLang("es"); setLangMenuOpen(false); }}
+                      className={`w-full text-left px-4 py-2 text-xs transition-colors hover:bg-muted ${lang === "es" ? "text-primary font-bold" : ""}`}
+                    >
+                      Español
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* Dark mode toggle */}
             <button
@@ -325,12 +357,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   {link.label}
                 </Link>
               ))}
-              <button
-                onClick={() => { toggleLang(); setIsMenuOpen(false); }}
-                className="text-left text-sm font-medium py-2 px-3 rounded-lg text-muted-foreground hover:bg-muted transition-colors"
-              >
-                🌐 {t.langToggle}
-              </button>
+              <div className="flex gap-2 py-2 px-3 border-t border-b my-1">
+                <button
+                  onClick={() => { setLang("fr"); setIsMenuOpen(false); }}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${lang === "fr" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                >
+                  Français
+                </button>
+                <button
+                  onClick={() => { setLang("ht"); setIsMenuOpen(false); }}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${lang === "ht" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                >
+                  Kreyòl
+                </button>
+                <button
+                  onClick={() => { setLang("es"); setIsMenuOpen(false); }}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${lang === "es" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                >
+                  Español
+                </button>
+              </div>
               {user && (
                 <div className="pt-2 mt-1 border-t space-y-1">
                   <Link

@@ -258,6 +258,7 @@ function OfflineDownload({ res }: { res: ExamResource }) {
         navigator.serviceWorker.removeEventListener("controllerchange", checkStatus);
       };
     }
+    return;
   }, [proxyUrl]);
 
   const handleDownload = (e: React.MouseEvent) => {
